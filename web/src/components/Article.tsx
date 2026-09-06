@@ -34,6 +34,8 @@ export const Article = ({ summary, entry, feed, isLoading, error, onSelectFeed, 
   const current = entry ?? summary
   const link = current.url
   const site = hostOf(link) ?? hostOf(feed?.siteUrl ?? null)
+  const author = current.author?.trim()
+  const byline = author && author.toLowerCase() !== feed?.title.trim().toLowerCase() ? author : null
 
   return (
     <article className="article">
@@ -46,7 +48,18 @@ export const Article = ({ summary, entry, feed, isLoading, error, onSelectFeed, 
                 <span>{feed.title}</span>
               </button>
             )}
-            {current.author && <span className="article-author">{current.author}</span>}
+            {/* Many feeds set the author to the publication name; saying it twice is noise. */}
+            {byline && (
+              <>
+                <span className="article-sep" aria-hidden>
+                  ·
+                </span>
+                <span className="article-author">{byline}</span>
+              </>
+            )}
+            <span className="article-sep" aria-hidden>
+              ·
+            </span>
             <time dateTime={new Date(current.publishedAt).toISOString()}>{formatFull(current.publishedAt)}</time>
           </div>
           <h1 className="article-title">

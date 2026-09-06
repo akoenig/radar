@@ -38,6 +38,7 @@
   --sidebar-w: 268px;
   --list-w: 400px;
   --stream-w: 760px;
+  --discover-w: 1080px;
 
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --t-fast: 120ms;
