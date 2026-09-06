@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react"
 import type { Category, Feed, View } from "../lib/types"
 import { useStore } from "../state/store"
+import { usePwa } from "../hooks/usePwa"
 import { useCategories, useFeeds, useStats } from "../state/queries"
 import {
   AlertIcon,
   BookmarkIcon,
   ChevronIcon,
+  CompassIcon,
   DotsIcon,
+  DownloadIcon,
   FolderIcon,
   ImportIcon,
   InboxIcon,
@@ -63,6 +66,7 @@ export const Sidebar = () => {
   const feeds = useFeeds()
   const categories = useCategories()
   const stats = useStats()
+  const pwa = usePwa()
 
   const grouped = useMemo(() => {
     const byCategory = new Map<string, Array<Feed>>()
@@ -144,6 +148,10 @@ export const Sidebar = () => {
           <span className="tree-label">Read later</span>
           <Count n={stats.data?.saved ?? 0} />
         </button>
+        <button type="button" className={`nav-item${state.view.kind === "discover" ? " active" : ""}`} onClick={() => setView({ kind: "discover" })}>
+          <CompassIcon size={16} />
+          <span className="tree-label">Discover</span>
+        </button>
       </nav>
 
       <div className="section-head">
@@ -175,6 +183,16 @@ export const Sidebar = () => {
           </li>
         )}
       </ul>
+
+      {pwa.canInstall && (
+        <button type="button" className="install-banner" onClick={() => void pwa.install()}>
+          <DownloadIcon size={15} />
+          <span>
+            <strong>Install Reader</strong>
+            <small>Open it like a native app, and read offline.</small>
+          </span>
+        </button>
+      )}
 
       <footer className="sidebar-footer">
         <button type="button" className="footer-button" onClick={() => dispatch({ type: "openDialog", dialog: { type: "opml" } })}>

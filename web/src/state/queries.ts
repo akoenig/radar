@@ -14,6 +14,7 @@ export const keys = {
   feeds: ["feeds"] as const,
   categories: ["categories"] as const,
   stats: ["stats"] as const,
+  catalog: ["catalog"] as const,
   entries: (view: View, unreadOnly: boolean, search: string) => ["entries", view, unreadOnly, search] as const,
   entry: (id: string) => ["entry", id] as const,
 }
@@ -29,8 +30,13 @@ export const useCategories = () =>
 export const useStats = () =>
   useQuery({ queryKey: keys.stats, queryFn: api.system.stats, staleTime: 30_000, refetchInterval: 60_000 })
 
+export const useCatalog = (enabled: boolean) =>
+  useQuery({ queryKey: keys.catalog, queryFn: api.system.catalog, enabled, staleTime: 5 * 60_000 })
+
 export const useEntries = (view: View, unreadOnly: boolean, search: string) => {
   const query = useInfiniteQuery({
+    // Discover has no entries; skip the request entirely.
+    enabled: view.kind !== "discover",
     queryKey: keys.entries(view, unreadOnly, search),
     queryFn: ({ pageParam }) => api.entries.list({ view, unreadOnly, search, cursor: pageParam, limit: PAGE_SIZE }),
     initialPageParam: undefined as string | undefined,
@@ -112,6 +118,7 @@ const invalidateAll = (client: QueryClient) =>
     client.invalidateQueries({ queryKey: keys.categories }),
     client.invalidateQueries({ queryKey: keys.stats }),
     client.invalidateQueries({ queryKey: ["entries"] }),
+    client.invalidateQueries({ queryKey: keys.catalog }),
   ])
 
 // ---------------------------------------------------------------------------

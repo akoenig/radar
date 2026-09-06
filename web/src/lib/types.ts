@@ -71,8 +71,25 @@ export type ApiErrorBody =
   | { readonly _tag: "BadRequest"; readonly message: string }
   | { readonly _tag: string; readonly message?: string }
 
+export interface CatalogFeed {
+  readonly id: string
+  readonly title: string
+  readonly description: string
+  readonly url: string
+  readonly siteUrl: string
+  readonly subscribedAs: string | null
+}
+
+export interface CatalogTopic {
+  readonly id: string
+  readonly name: string
+  readonly description: string
+  readonly feeds: ReadonlyArray<CatalogFeed>
+}
+
 export type View =
   | { readonly kind: "all" }
   | { readonly kind: "saved" }
+  | { readonly kind: "discover" }
   | { readonly kind: "feed"; readonly id: string }
   | { readonly kind: "category"; readonly id: string }

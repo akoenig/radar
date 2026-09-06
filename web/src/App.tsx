@@ -1,11 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { AddFeedDialog, CategoriesDialog, EditFeedDialog, OpmlDialog, ShortcutsDialog } from "./components/dialogs"
+import { DiscoverView } from "./components/DiscoverView"
 import { EntryList } from "./components/EntryList"
 import { ReadingPane } from "./components/ReadingPane"
 import { Sidebar } from "./components/Sidebar"
 import { useToast } from "./components/Toast"
 import { useKeyboard, type Binding } from "./hooks/useKeyboard"
+import { useOnline } from "./hooks/useOnline"
 import type { Feed, View } from "./lib/types"
 import {
   prefetchEntry,
@@ -26,6 +28,8 @@ const viewTitle = (view: View, feeds: ReadonlyArray<Feed>, categories: ReadonlyA
       return "All items"
     case "saved":
       return "Read later"
+    case "discover":
+      return "Discover"
     case "feed":
       return feeds.find((f) => f.id === view.id)?.title ?? "Subscription"
     case "category":
@@ -36,6 +40,7 @@ const viewTitle = (view: View, feeds: ReadonlyArray<Feed>, categories: ReadonlyA
 export const App = () => {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const online = useOnline()
   const client = useQueryClient()
   const feeds = useFeeds()
   const categories = useCategories()
@@ -49,6 +54,7 @@ export const App = () => {
   const readingScroll = useRef<HTMLDivElement>(null)
   const listScroll = useRef<HTMLUListElement>(null)
   const stream = state.layout === "stream"
+  const discovering = state.view.kind === "discover"
   /** Whichever element scrolls the article body in the current layout. */
   const articleScroll = (): HTMLElement | null => (stream ? listScroll.current : readingScroll.current)
 
@@ -190,6 +196,7 @@ export const App = () => {
       { keys: ["shift+k", "["], run: () => moveFeed(-1) },
       { keys: ["g a"], run: () => dispatch({ type: "setView", view: { kind: "all" } }) },
       { keys: ["g s"], run: () => dispatch({ type: "setView", view: { kind: "saved" } }) },
+      { keys: ["g d"], run: () => dispatch({ type: "setView", view: { kind: "discover" } }) },
       { keys: ["c"], run: () => dispatch({ type: "setDensity", density: state.density === "compact" ? "cozy" : "compact" }) },
       { keys: ["1"], run: () => dispatch({ type: "setLayout", layout: "stream" }) },
       { keys: ["2"], run: () => dispatch({ type: "setLayout", layout: "split" }) },
@@ -227,9 +234,14 @@ export const App = () => {
   }, [list])
 
   return (
-    <div className={`app layout-${state.layout} pane-${stream ? "list" : state.mobilePane}${state.sidebarOpen ? " sidebar-open" : ""}`}>
+    <div
+      className={`app layout-${discovering ? "stream" : state.layout} pane-${stream || discovering ? "list" : state.mobilePane}${state.sidebarOpen ? " sidebar-open" : ""}`}
+    >
       <Sidebar />
       {state.sidebarOpen && <div className="sidebar-scrim only-narrow" onClick={() => dispatch({ type: "setSidebarOpen", open: false })} />}
+      {discovering ? (
+        <DiscoverView onOpenSidebar={() => dispatch({ type: "setSidebarOpen", open: true })} />
+      ) : (
       <EntryList
         view={state.view}
         title={title}
@@ -267,7 +279,8 @@ export const App = () => {
         onToggleRead={toggleRead}
         onSelectFeed={(feedId) => dispatch({ type: "setView", view: { kind: "feed", id: feedId } })}
       />
-      {!stream && (
+      )}
+      {!stream && !discovering && (
         <ReadingPane
           summary={selected}
           entry={entry.data}
@@ -280,6 +293,12 @@ export const App = () => {
           onBack={() => dispatch({ type: "setMobilePane", pane: "list" })}
           onSelectFeed={(feedId) => dispatch({ type: "setView", view: { kind: "feed", id: feedId } })}
         />
+      )}
+
+      {!online && (
+        <div className="offline-bar" role="status">
+          Offline — showing what was already downloaded.
+        </div>
       )}
 
       {state.dialog?.type === "add" && <AddFeedDialog initialUrl={state.dialog.url ?? ""} />}

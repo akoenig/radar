@@ -2,6 +2,7 @@ import type {
   ApiErrorBody,
   Category,
   DiscoveredFeed,
+  CatalogTopic,
   Entry,
   EntryPage,
   Feed,
@@ -22,9 +23,10 @@ export class ApiError extends Error {
 }
 
 const describe = (status: number, body: ApiErrorBody | null): string => {
+  // The service worker answers uncached requests with this while offline.
+  if (body?._tag === "Offline" || status === 0) return "You’re offline. Showing what was already downloaded."
   if (body && "message" in body && typeof body.message === "string") return body.message
   if (body?._tag === "NotFound") return "That item no longer exists."
-  if (status === 0) return "Could not reach the server."
   return `Request failed (${status}).`
 }
 
@@ -113,6 +115,7 @@ export const api = {
   },
   system: {
     stats: () => request<Stats>("GET", "/api/stats"),
+    catalog: () => request<ReadonlyArray<CatalogTopic>>("GET", "/api/catalog"),
     refreshAll: () => request<ReadonlyArray<RefreshResult>>("POST", "/api/refresh"),
     discover: (url: string) => request<ReadonlyArray<DiscoveredFeed>>("GET", `/api/discover${query({ url })}`),
     importOpml: (xml: string) => request<ImportSummary>("POST", "/api/opml", { text: xml }),

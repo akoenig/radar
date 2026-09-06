@@ -6,12 +6,25 @@ import { EntryService } from "../src/application/EntryService.js"
 import { OpmlService } from "../src/application/OpmlService.js"
 import { RefreshService } from "../src/application/RefreshService.js"
 import { SubscriptionService } from "../src/application/SubscriptionService.js"
+import { StaticFeedCatalogLive } from "../src/adapters/outbound/catalog/StaticFeedCatalog.js"
 import { FastXmlOpmlCodecLive } from "../src/adapters/outbound/opml/FastXmlOpmlCodec.js"
+import { CatalogService } from "../src/application/CatalogService.js"
 import { MemoryAdapters, ids, makeState, parsedFeed, type MemoryState } from "./support/InMemoryAdapters.js"
 
-const run = <A, E>(state: MemoryState, effect: Effect.Effect<A, E, SubscriptionService | RefreshService | EntryService | CategoryService | OpmlService>) =>
+const run = <A, E>(
+  state: MemoryState,
+  effect: Effect.Effect<A, E, SubscriptionService | RefreshService | EntryService | CategoryService | OpmlService | CatalogService>,
+) =>
   Effect.runPromise(
-    effect.pipe(Effect.provide(ApplicationLive.pipe(Layer.provide(MemoryAdapters(state)), Layer.provide(FastXmlOpmlCodecLive)))),
+    effect.pipe(
+      Effect.provide(
+        ApplicationLive.pipe(
+          Layer.provide(MemoryAdapters(state)),
+          Layer.provide(FastXmlOpmlCodecLive),
+          Layer.provide(StaticFeedCatalogLive),
+        ),
+      ),
+    ),
   )
 
 describe("SubscriptionService", () => {
@@ -231,5 +244,31 @@ describe("OpmlService", () => {
   it("rejects documents that are not OPML", async () => {
     const result = await run(makeState(), Effect.flatMap(OpmlService, (o) => o.importOpml("<html/>")).pipe(Effect.result))
     expect(result._tag === "Failure" && result.failure._tag).toBe("InvalidOpml")
+  })
+})
+
+describe("CatalogService", () => {
+  it("offers topics of feeds and flags the ones already subscribed", async () => {
+    const state = makeState()
+    const topics = await run(state, Effect.flatMap(CatalogService, (c) => c.browse))
+
+    expect(topics.length).toBeGreaterThan(3)
+    expect(topics.every((t) => t.feeds.length > 0)).toBe(true)
+    expect(topics.flatMap((t) => t.feeds).every((f) => f.subscribedAs === null)).toBe(true)
+
+    // Ids must be unique, or the client cannot key the grid.
+    const ids = topics.flatMap((t) => t.feeds.map((f) => f.id))
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it("matches a subscription even when the stored URL differs by a trailing slash", async () => {
+    const state = makeState()
+    const target = (await run(state, Effect.flatMap(CatalogService, (c) => c.browse)))[0]!.feeds[0]!
+    state.remote.set(`${target.url}/`, parsedFeed())
+
+    const feed = await run(state, Effect.flatMap(SubscriptionService, (s) => s.subscribe({ url: `${target.url}/` })))
+    const topics = await run(state, Effect.flatMap(CatalogService, (c) => c.browse))
+
+    expect(topics[0]!.feeds[0]!.subscribedAs).toBe(feed.id)
   })
 })

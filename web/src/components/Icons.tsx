@@ -130,6 +130,18 @@ export const RowsIcon = (p: IconProps) => (
     <path d="M3 10h18M3 14.5h18" />
   </svg>
 )
+export const DownloadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="4" y="3" width="16" height="18" rx="3" />
+    <path d="M12 8v7M9 12.5l3 3 3-3" />
+  </svg>
+)
+export const CompassIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M15.5 8.5l-2 5-5 2 2-5z" />
+  </svg>
+)
 export const CompactIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />

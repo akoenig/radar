@@ -79,6 +79,8 @@ export const viewToHash = (view: View): string => {
       return "#/all"
     case "saved":
       return "#/saved"
+    case "discover":
+      return "#/discover"
     case "feed":
       return `#/feed/${encodeURIComponent(view.id)}`
     case "category":
@@ -89,6 +91,7 @@ export const viewToHash = (view: View): string => {
 export const hashToView = (hash: string): View => {
   const parts = hash.replace(/^#\/?/, "").split("/")
   if (parts[0] === "saved") return { kind: "saved" }
+  if (parts[0] === "discover") return { kind: "discover" }
   if (parts[0] === "feed" && parts[1]) return { kind: "feed", id: decodeURIComponent(parts[1]) }
   if (parts[0] === "category" && parts[1]) return { kind: "category", id: decodeURIComponent(parts[1]) }
   return { kind: "all" }

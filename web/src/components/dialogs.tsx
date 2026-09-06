@@ -352,6 +352,7 @@ const SHORTCUTS: ReadonlyArray<{ group: string; items: ReadonlyArray<[keys: Read
       [["shift+k", "["], "Previous subscription"],
       [["g a"], "All items"],
       [["g s"], "Read later"],
+      [["g d"], "Discover"],
       [["o", "enter"], "Focus the article"],
     ],
   },

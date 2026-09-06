@@ -69,6 +69,24 @@ export const DiscoveredFeedDto = Schema.Struct({
   type: Schema.NullOr(Schema.String),
 })
 
+export const CatalogFeedDto = Schema.Struct({
+  id: Schema.String,
+  title: Schema.String,
+  description: Schema.String,
+  url: Schema.String,
+  siteUrl: Schema.String,
+  /** The reader's feed id when already subscribed, otherwise null. */
+  subscribedAs: Schema.NullOr(Schema.String),
+})
+
+export const CatalogTopicDto = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.String,
+  feeds: Schema.Array(CatalogFeedDto),
+})
+export type CatalogTopicDto = typeof CatalogTopicDto.Type
+
 export const StatsDto = Schema.Struct({ unread: Schema.Number, saved: Schema.Number })
 export type StatsDto = typeof StatsDto.Type
 
@@ -187,6 +205,7 @@ export const SystemGroup = HttpApiGroup.make("system").add(
     success: Schema.Array(DiscoveredFeedDto),
     error: UnprocessableFeed,
   }),
+  HttpApiEndpoint.get("catalog", "/catalog", { success: Schema.Array(CatalogTopicDto) }),
   HttpApiEndpoint.get("exportOpml", "/opml", { success: OpmlText }),
   HttpApiEndpoint.post("importOpml", "/opml", { payload: PlainText, success: ImportSummaryDto, error: BadRequest }),
 )
