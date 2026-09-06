@@ -5,14 +5,19 @@ accounts: it is meant to run behind the owner login of a
 [Cloud in a Bottle](https://cloudinabottle.org) instance (or any private reverse proxy).
 
 - Subscribe by pasting a site or feed URL (RSS 2.0, Atom, RSS 1.0 and JSON Feed, with
-  autodiscovery from web pages).
+  autodiscovery from web pages), or browse **Discover**, a curated catalog of feeds
+  grouped by topic.
 - Folders, unread counts, read/unread, "read later", search, OPML import/export.
 - Background refresh with conditional requests (ETag / Last-Modified).
 - Two layouts, switchable with `1` (expanded: one column, entries open in place) and
   `2` (split: list beside a reading pane), plus a compact row density on `c`. Both
   choices are remembered.
 - Everything reachable from the keyboard: `j`/`k`, `s`, `m`, `v`, `a`, `/`, `g a`, `?` …
-- Light and dark "ink on paper" themes.
+- Light and dark "ink on paper" themes, in one sans typeface.
+- Installable as a PWA, and readable offline: the shell is precached and feeds and
+  articles you have already opened are served from cache when the network is gone.
+- Responsive from a 320px phone to a wide desktop, with touch-sized targets and
+  safe-area handling when installed.
 
 ## Layout
 
@@ -25,7 +30,8 @@ server/   Effect v4 backend, hexagonal architecture
     inbound/scheduler  periodic refresh (driving adapter)
     outbound/sqlite repositories over node:sqlite (driven adapter)
     outbound/feed   HTTP fetcher, parser, autodiscovery (driven adapter)
-    outbound/opml   OPML codec (driven adapter)
+    outbound/catalog  curated Discover catalog (driven adapter)
+  outbound/opml   OPML codec (driven adapter)
     outbound/system id generation (driven adapter)
   src/infrastructure  composition root: config + layer wiring
   test/             in-memory adapters + application/adapter tests
@@ -86,3 +92,12 @@ OpenAPI is served at `/api/openapi.json`. Main endpoints:
 - `GET /api/entries?feed=&category=&unread=&saved=&q=&cursor=`, `GET /api/entries/:id`
 - `POST /api/entries/mark`, `POST /api/entries/mark-all`, `PUT /api/entries/:id/saved`
 - `GET /api/stats`, `POST /api/refresh`, `GET /api/discover?url=`, `GET|POST /api/opml`
+- `GET /api/catalog` — the Discover directory, each entry flagged if already subscribed
+
+## Notes
+
+- **Proxies.** Feed fetching honours `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY`. On a
+  host whose only egress is a proxy, this is what keeps refreshes from timing out.
+- **Docker.** The image is Debian-based on purpose: `effect` depends on `msgpackr`,
+  whose optional native accelerator only ships glibc prebuilds, so an Alpine build
+  would try to compile it from source and fail.
