@@ -1,9 +1,10 @@
 import { Duration, Layer } from "effect"
-import { NodeHttpClient } from "@effect/platform-node"
 import { ApplicationLive } from "../application/index.js"
 import { HttpServerLive } from "../adapters/inbound/http/HttpServerLive.js"
 import { RefreshSchedulerLive } from "../adapters/inbound/scheduler/RefreshScheduler.js"
+import { StaticFeedCatalogLive } from "../adapters/outbound/catalog/StaticFeedCatalog.js"
 import { HttpFeedSourceLive } from "../adapters/outbound/feed/HttpFeedSource.js"
+import { ProxyAwareHttpClientLive } from "../adapters/outbound/feed/ProxyAwareHttpClient.js"
 import { FastXmlOpmlCodecLive } from "../adapters/outbound/opml/FastXmlOpmlCodec.js"
 import { SqlitePersistenceLive } from "../adapters/outbound/sqlite/index.js"
 import { CryptoIdGeneratorLive } from "../adapters/outbound/system/CryptoIdGenerator.js"
@@ -16,9 +17,10 @@ import type { AppConfigShape } from "./Config.js"
 export const makeAppLayer = (config: AppConfigShape) => {
   const DrivenAdapters = Layer.mergeAll(
     SqlitePersistenceLive({ path: config.databasePath }),
-    HttpFeedSourceLive.pipe(Layer.provide(NodeHttpClient.layerUndici)),
+    HttpFeedSourceLive.pipe(Layer.provide(ProxyAwareHttpClientLive)),
     CryptoIdGeneratorLive,
     FastXmlOpmlCodecLive,
+    StaticFeedCatalogLive,
   )
 
   const Application = ApplicationLive.pipe(Layer.provide(DrivenAdapters))
