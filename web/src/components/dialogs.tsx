@@ -369,6 +369,7 @@ const SHORTCUTS: ReadonlyArray<{ group: string; items: ReadonlyArray<[keys: Read
   {
     group: "Manage",
     items: [
+      [["c"], "Compact rows"],
       [["1"], "Expanded view"],
       [["2"], "Split view"],
       [["a"], "Add subscription"],

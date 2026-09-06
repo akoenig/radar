@@ -6,6 +6,9 @@ export type Theme = "light" | "dark" | "system"
 /** "split" = sidebar + list + reading pane. "stream" = one column, entries expand in place. */
 export type Layout = "split" | "stream"
 
+/** Row height in the entry list. "compact" trims padding and hides the snippet. */
+export type Density = "cozy" | "compact"
+
 export type DialogState =
   | null
   | { readonly type: "add"; readonly url?: string }
@@ -23,6 +26,7 @@ export interface State {
   readonly dialog: DialogState
   readonly theme: Theme
   readonly layout: Layout
+  readonly density: Density
   readonly sidebarOpen: boolean
   /** Which pane is visible on narrow screens. */
   readonly mobilePane: "list" | "article"
@@ -39,6 +43,7 @@ export type Action =
   | { type: "closeDialog" }
   | { type: "setTheme"; theme: Theme }
   | { type: "setLayout"; layout: Layout }
+  | { type: "setDensity"; density: Density }
   | { type: "setSidebarOpen"; open: boolean }
   | { type: "setMobilePane"; pane: "list" | "article" }
   | { type: "toggleCollapsed"; id: string }
@@ -47,6 +52,7 @@ const STORAGE = {
   unreadOnly: "reader.unreadOnly",
   theme: "reader.theme",
   layout: "reader.layout",
+  density: "reader.density",
   collapsed: "reader.collapsed",
 }
 
@@ -99,6 +105,7 @@ const initialState = (): State => ({
   dialog: null,
   theme: read(STORAGE.theme, "system", (r) => (r === "light" || r === "dark" ? r : "system")),
   layout: read(STORAGE.layout, "split", (r) => (r === "stream" ? "stream" : "split")),
+  density: read(STORAGE.density, "cozy", (r) => (r === "compact" ? "compact" : "cozy")),
   sidebarOpen: false,
   mobilePane: "list",
   collapsed: read(STORAGE.collapsed, new Set<string>(), (r) => new Set(JSON.parse(r) as string[])),
@@ -123,6 +130,8 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, dialog: null }
     case "setTheme":
       return { ...state, theme: action.theme }
+    case "setDensity":
+      return { ...state, density: action.density }
     case "setLayout":
       // Leaving the article pane behind should not strand the mobile view on it.
       return { ...state, layout: action.layout, mobilePane: action.layout === "stream" ? "list" : state.mobilePane }
@@ -148,6 +157,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => write(STORAGE.unreadOnly, String(state.unreadOnly)), [state.unreadOnly])
   useEffect(() => write(STORAGE.collapsed, JSON.stringify([...state.collapsed])), [state.collapsed])
   useEffect(() => write(STORAGE.layout, state.layout), [state.layout])
+  useEffect(() => write(STORAGE.density, state.density), [state.density])
   useEffect(() => {
     write(STORAGE.theme, state.theme)
     const root = document.documentElement

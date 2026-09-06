@@ -190,6 +190,7 @@ export const App = () => {
       { keys: ["shift+k", "["], run: () => moveFeed(-1) },
       { keys: ["g a"], run: () => dispatch({ type: "setView", view: { kind: "all" } }) },
       { keys: ["g s"], run: () => dispatch({ type: "setView", view: { kind: "saved" } }) },
+      { keys: ["c"], run: () => dispatch({ type: "setDensity", density: state.density === "compact" ? "cozy" : "compact" }) },
       { keys: ["1"], run: () => dispatch({ type: "setLayout", layout: "stream" }) },
       { keys: ["2"], run: () => dispatch({ type: "setLayout", layout: "split" }) },
       { keys: ["shift+/", "?"], run: () => dispatch({ type: "openDialog", dialog: { type: "shortcuts" } }) },
@@ -211,7 +212,7 @@ export const App = () => {
         },
       },
     ],
-    [move, scrollArticle, toggleRead, toggleSaved, openOriginal, doMarkAllRead, doRefresh, dispatch, state.unreadOnly, state.sidebarOpen, state.search, state.searchOpen, state.mobilePane, currentFeedId, moveFeed, toast, stream],
+    [move, scrollArticle, toggleRead, toggleSaved, openOriginal, doMarkAllRead, doRefresh, dispatch, state.unreadOnly, state.sidebarOpen, state.search, state.searchOpen, state.mobilePane, currentFeedId, moveFeed, toast, stream, state.density],
   )
   useKeyboard(bindings, state.dialog === null)
 
@@ -241,6 +242,7 @@ export const App = () => {
         searchRef={searchRef}
         listRef={listScroll}
         layout={state.layout}
+        density={state.density}
         entry={entry.data}
         entryLoading={entry.isLoading}
         entryError={entry.error}
@@ -260,6 +262,7 @@ export const App = () => {
         onAddFeed={() => dispatch({ type: "openDialog", dialog: { type: "add" } })}
         onImport={() => dispatch({ type: "openDialog", dialog: { type: "opml" } })}
         onSetLayout={(layout) => dispatch({ type: "setLayout", layout })}
+        onToggleDensity={() => dispatch({ type: "setDensity", density: state.density === "compact" ? "cozy" : "compact" })}
         onToggleSaved={toggleSaved}
         onToggleRead={toggleRead}
         onSelectFeed={(feedId) => dispatch({ type: "setView", view: { kind: "feed", id: feedId } })}

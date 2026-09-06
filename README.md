@@ -9,7 +9,8 @@ accounts: it is meant to run behind the owner login of a
 - Folders, unread counts, read/unread, "read later", search, OPML import/export.
 - Background refresh with conditional requests (ETag / Last-Modified).
 - Two layouts, switchable with `1` (expanded: one column, entries open in place) and
-  `2` (split: list beside a reading pane). The choice is remembered.
+  `2` (split: list beside a reading pane), plus a compact row density on `c`. Both
+  choices are remembered.
 - Everything reachable from the keyboard: `j`/`k`, `s`, `m`, `v`, `a`, `/`, `g a`, `?` …
 - Light and dark "ink on paper" themes.
 

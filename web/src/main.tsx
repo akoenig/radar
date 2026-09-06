@@ -1,7 +1,5 @@
 import "@fontsource-variable/geist"
 import "@fontsource-variable/geist-mono"
-import "@fontsource-variable/newsreader"
-import "@fontsource-variable/newsreader/wght-italic.css"
 import "./styles/tokens.css"
 import "./styles/app.css"
 

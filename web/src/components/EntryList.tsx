@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from "react"
 import type { Entry, EntrySummary, Feed, View } from "../lib/types"
 import { formatRelative } from "../lib/time"
-import type { Layout } from "../state/store"
+import type { Density, Layout } from "../state/store"
 import { Article } from "./Article"
 import {
   BackIcon,
@@ -10,6 +10,7 @@ import {
   CircleIcon,
   CloseIcon,
   ColumnsIcon,
+  CompactIcon,
   ExternalIcon,
   MenuIcon,
   RefreshIcon,
@@ -29,6 +30,7 @@ interface EntryListProps {
   readonly searchRef: RefObject<HTMLInputElement | null>
   readonly listRef: RefObject<HTMLUListElement | null>
   readonly layout: Layout
+  readonly density: Density
   /** Body of the selected entry, for the stream layout. */
   readonly entry: Entry | undefined
   readonly entryLoading: boolean
@@ -49,6 +51,7 @@ interface EntryListProps {
   readonly onAddFeed: () => void
   readonly onImport: () => void
   readonly onSetLayout: (layout: Layout) => void
+  readonly onToggleDensity: () => void
   readonly onToggleSaved: () => void
   readonly onToggleRead: () => void
   readonly onSelectFeed: (feedId: string) => void
@@ -106,6 +109,7 @@ export const EntryList = (props: EntryListProps) => {
   const sentinel = useRef<HTMLDivElement>(null)
   const listRef = props.listRef
   const stream = props.layout === "stream"
+  const compact = props.density === "compact"
 
   useEffect(() => {
     const node = sentinel.current
@@ -122,7 +126,7 @@ export const EntryList = (props: EntryListProps) => {
   const showFilter = props.view.kind !== "saved"
 
   return (
-    <section className={`list-pane${stream ? " stream" : ""}`} aria-label="Entries">
+    <section className={`list-pane${stream ? " stream" : ""}${compact ? " compact" : ""}`} aria-label="Entries">
       <header className="list-header">
         <div className="list-header-row">
           <button type="button" className="icon-button only-narrow" onClick={props.onOpenSidebar} aria-label="Open subscriptions">
@@ -153,6 +157,16 @@ export const EntryList = (props: EntryListProps) => {
                 <RowsIcon size={14} />
               </button>
             </div>
+            <button
+              type="button"
+              className={`icon-button${compact ? " on" : ""}`}
+              onClick={props.onToggleDensity}
+              aria-pressed={compact}
+              aria-label="Compact rows"
+              title="Compact rows (c)"
+            >
+              <CompactIcon />
+            </button>
             <button type="button" className="icon-button" onClick={() => props.searchRef.current?.focus()} aria-label="Search" title="Search (/)">
               <SearchIcon />
             </button>
