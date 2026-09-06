@@ -36,6 +36,12 @@ export const HttpServerLive = (options: HttpServerOptions) =>
     Layer.mergeAll(
       ApiLive,
       ApiFallback,
-      HttpStaticServer.layer({ root: options.staticDir, spa: true, cacheControl: "public, max-age=0, must-revalidate" }),
+      HttpStaticServer.layer({
+        root: options.staticDir,
+        spa: true,
+        cacheControl: "public, max-age=0, must-revalidate",
+        // Not in the default table, and browsers refuse a manifest served as octet-stream.
+        mimeTypes: { webmanifest: "application/manifest+json" },
+      }),
     ),
   ).pipe(Layer.provide(NodeHttpServer.layer(createServer, { host: options.host, port: options.port })))
