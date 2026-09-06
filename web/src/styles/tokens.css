@@ -1,0 +1,98 @@
+/* Design tokens. Light is the default "paper" palette; dark is "ink". */
+:root {
+  color-scheme: light;
+
+  --font-ui: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Newsreader Variable", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --bg: #f3f0e9;
+  --surface: #faf8f3;
+  --surface-2: #eeeae1;
+  --surface-3: #e4dfd3;
+  --line: rgba(38, 32, 22, 0.1);
+  --line-strong: rgba(38, 32, 22, 0.2);
+  --ink: #1d1a15;
+  --ink-2: #5d5647;
+  --ink-3: #8f8676;
+  --ink-4: #bcb3a2;
+  --accent: #b5432a;
+  --accent-hover: #9d3822;
+  --accent-soft: rgba(181, 67, 42, 0.12);
+  --accent-ink: #fff9f5;
+  --gold: #a8741c;
+  --gold-soft: rgba(168, 116, 28, 0.14);
+  --danger: #a5312a;
+  --danger-soft: rgba(165, 49, 42, 0.12);
+  --success: #3a6b39;
+  --scrim: rgba(30, 26, 18, 0.42);
+
+  --shadow-1: 0 1px 2px rgba(30, 25, 15, 0.06), 0 1px 1px rgba(30, 25, 15, 0.04);
+  --shadow-2: 0 18px 40px -12px rgba(30, 25, 15, 0.28), 0 2px 8px rgba(30, 25, 15, 0.08);
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+
+  --sidebar-w: 268px;
+  --list-w: 400px;
+  --stream-w: 760px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 120ms;
+  --t-med: 220ms;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #131210;
+  --surface: #1a1816;
+  --surface-2: #22201b;
+  --surface-3: #2c2923;
+  --line: rgba(255, 244, 222, 0.08);
+  --line-strong: rgba(255, 244, 222, 0.16);
+  --ink: #ebe5d8;
+  --ink-2: #aaa192;
+  --ink-3: #7c7466;
+  --ink-4: #514b3f;
+  --accent: #e4674b;
+  --accent-hover: #ee7d63;
+  --accent-soft: rgba(228, 103, 75, 0.16);
+  --accent-ink: #1b0e0a;
+  --gold: #d8a441;
+  --gold-soft: rgba(216, 164, 65, 0.16);
+  --danger: #e25d52;
+  --danger-soft: rgba(226, 93, 82, 0.16);
+  --success: #82c17a;
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #131210;
+    --surface: #1a1816;
+    --surface-2: #22201b;
+    --surface-3: #2c2923;
+    --line: rgba(255, 244, 222, 0.08);
+    --line-strong: rgba(255, 244, 222, 0.16);
+    --ink: #ebe5d8;
+    --ink-2: #aaa192;
+    --ink-3: #7c7466;
+    --ink-4: #514b3f;
+    --accent: #e4674b;
+    --accent-hover: #ee7d63;
+    --accent-soft: rgba(228, 103, 75, 0.16);
+    --accent-ink: #1b0e0a;
+    --gold: #d8a441;
+    --gold-soft: rgba(216, 164, 65, 0.16);
+    --danger: #e25d52;
+    --danger-soft: rgba(226, 93, 82, 0.16);
+    --success: #82c17a;
+    --scrim: rgba(0, 0, 0, 0.55);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-2: 0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}

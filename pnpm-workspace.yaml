@@ -1,0 +1,7 @@
+packages:
+  - server
+  - web
+
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: true

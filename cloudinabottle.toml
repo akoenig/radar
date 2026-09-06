@@ -1,0 +1,20 @@
+[app]
+name = "reader"
+version = "0.1.0"
+description = "A keyboard-first feed reader in the spirit of Google Reader"
+
+[runtime.container]
+image = "Dockerfile"
+port = 8080
+
+[resources]
+memory_mb = 256
+cpu_cores = 0.25
+
+[data]
+# SQLite lives under $BOTTLE_APP_DATA_DIR, which the server picks up automatically.
+app_data = true
+
+[routing]
+health_check = "/api/health"
+# No public paths: the router's owner login is the only authentication layer.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>My subscriptions</title></head>
+  <body>
+    <outline type="rss" text="Loose feed" xmlUrl="https://loose.example.com/rss" htmlUrl="https://loose.example.com/"/>
+    <outline text="Tech" title="Tech">
+      <outline type="rss" text="Signal &amp; Noise" xmlUrl="https://signal.example.org/feed.atom" htmlUrl="https://signal.example.org/"/>
+      <outline text="Nested">
+        <outline type="rss" text="Deep feed" xmlUrl="https://deep.example.org/feed"/>
+      </outline>
+    </outline>
+  </body>
+</opml>

@@ -1,0 +1,27 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "JSON Dispatch",
+  "home_page_url": "https://json.example.net/",
+  "feed_url": "https://json.example.net/feed.json",
+  "description": "A feed in JSON.",
+  "icon": "https://json.example.net/icon.png",
+  "authors": [{ "name": "Site Author" }],
+  "items": [
+    {
+      "id": "1",
+      "url": "https://json.example.net/one",
+      "title": "First JSON item",
+      "content_html": "<p>Hello from JSON Feed.</p>",
+      "date_published": "2026-09-01T07:00:00Z",
+      "authors": [{ "name": "J. Author" }]
+    },
+    {
+      "id": "2",
+      "url": "https://json.example.net/two",
+      "title": "Text-only item",
+      "content_text": "Plain text body.",
+      "summary": "A short summary.",
+      "date_published": "2026-08-30T07:00:00Z"
+    }
+  ]
+}

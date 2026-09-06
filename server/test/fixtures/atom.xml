@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Signal &amp; Noise</title>
+  <subtitle>Notes from the lab</subtitle>
+  <link href="https://signal.example.org/"/>
+  <link rel="self" href="https://signal.example.org/feed.atom"/>
+  <icon>https://signal.example.org/icon.png</icon>
+  <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+  <updated>2026-09-05T12:00:00Z</updated>
+  <author><name>Lab Team</name></author>
+  <entry>
+    <title type="html">Measuring &lt;em&gt;latency&lt;/em&gt; honestly</title>
+    <link rel="alternate" type="text/html" href="/posts/latency"/>
+    <link rel="enclosure" type="audio/mpeg" href="/audio/latency.mp3"/>
+    <id>tag:signal.example.org,2026:posts/latency</id>
+    <published>2026-09-05T08:30:00Z</published>
+    <updated>2026-09-05T12:00:00Z</updated>
+    <author><name>Rin Okabe</name></author>
+    <summary>p99 is a story, not a number.</summary>
+    <content type="html">&lt;p&gt;p99 is a story, not a number. Here is how we tell it.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Sample honestly&lt;/li&gt;&lt;li&gt;Plot the tail&lt;/li&gt;&lt;/ul&gt;</content>
+  </entry>
+  <entry>
+    <title>XHTML content entry</title>
+    <link href="https://signal.example.org/posts/xhtml"/>
+    <id>tag:signal.example.org,2026:posts/xhtml</id>
+    <updated>2026-09-04T10:00:00Z</updated>
+    <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>Inline <b>XHTML</b> body.</p></div></content>
+  </entry>
+</feed>

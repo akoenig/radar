@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>The Margins &amp; Notes</title>
+    <link>https://margins.example.com/</link>
+    <description>Essays on reading, software, and the spaces between.</description>
+    <image><url>https://margins.example.com/logo.png</url><title>Margins</title><link>https://margins.example.com/</link></image>
+    <atom:link href="https://margins.example.com/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>On the Quiet Return of the Feed Reader</title>
+      <link>https://margins.example.com/posts/quiet-return</link>
+      <guid isPermaLink="false">margins-2026-0902</guid>
+      <pubDate>Wed, 02 Sep 2026 09:15:00 GMT</pubDate>
+      <dc:creator>Ada Wexler</dc:creator>
+      <description><![CDATA[<p>For a decade we let algorithms decide what we saw. A small, stubborn corner of the web kept publishing feeds anyway.</p>]]></description>
+      <content:encoded><![CDATA[<p>For a decade we let algorithms decide what we saw. A small, stubborn corner of the web kept publishing feeds anyway.</p><h2>What changed</h2><p>Nothing about the format. Everything about our patience.</p><blockquote><p>The reader is not a product. It is a <em>habit</em>.</p></blockquote><pre><code>curl https://margins.example.com/rss.xml</code></pre><p>Read more <a href="/posts/quiet-return#more">here</a>.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Typography for Long Reads &#8212; a checklist</title>
+      <link>https://margins.example.com/posts/typography-checklist</link>
+      <guid>https://margins.example.com/posts/typography-checklist</guid>
+      <pubDate>Mon, 31 Aug 2026 18:40:00 +0000</pubDate>
+      <description>Measure, leading, contrast: the three levers that make a screen feel like paper. &lt;b&gt;Bold claims&lt;/b&gt; included.</description>
+    </item>
+    <item>
+      <title>Undated dispatch</title>
+      <link>https://margins.example.com/posts/undated</link>
+      <description>No pubDate on this one.</description>
+    </item>
+  </channel>
+</rss>
