@@ -87,6 +87,17 @@ describe("MCP server", () => {
     expect(response.status).toBe(401)
   })
 
+  it("never answers with the web app, whatever the request accepts", async () => {
+    // The static server's SPA fallback claims any extensionless path that
+    // accepts HTML. If this route were left unregistered while disabled, a
+    // browser at /mcp would be handed the reader and routed to #/all.
+    for (const accept of ["text/html", "*/*", "application/json"]) {
+      const response = await fetch(ENDPOINT, { method: "GET", headers: { accept } })
+      expect(response.headers.get("content-type") ?? "").not.toContain("text/html")
+      expect(await response.text()).not.toContain("<!doctype html")
+    }
+  })
+
   it("advertises its tools to a real MCP client", async () => {
     const client = await connect()
     const { tools } = await client.listTools()
