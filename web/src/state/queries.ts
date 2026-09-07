@@ -18,6 +18,8 @@ export const keys = {
   // Deliberately not nested under `catalog`: invalidating the catalog after a
   // subscribe must not re-fetch every open preview from its publisher.
   catalogPreview: (id: string) => ["catalog-preview", id] as const,
+  // Under `catalog` on purpose: subscribing must restamp search results too.
+  catalogSearch: (query: string) => ["catalog", "search", query] as const,
   entries: (view: View, unreadOnly: boolean, search: string) => ["entries", view, unreadOnly, search] as const,
   entry: (id: string) => ["entry", id] as const,
 }
@@ -35,6 +37,19 @@ export const useStats = () =>
 
 export const useCatalog = (enabled: boolean) =>
   useQuery({ queryKey: keys.catalog, queryFn: api.system.catalog, enabled, staleTime: 5 * 60_000 })
+
+/**
+ * Directory search. `placeholderData` keeps the previous results on screen
+ * while the next query is in flight, so typing does not blank the page.
+ */
+export const useCatalogSearch = (query: string) =>
+  useQuery({
+    queryKey: keys.catalogSearch(query),
+    queryFn: () => api.system.catalogSearch(query),
+    enabled: query.trim().length > 0,
+    staleTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
+  })
 
 /** Fetched only once a card is opened, and kept for the session. */
 export const useCatalogPreview = (id: string, enabled: boolean) =>

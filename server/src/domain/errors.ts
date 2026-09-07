@@ -35,6 +35,11 @@ export class FeedNotParseable extends Schema.TaggedError<FeedNotParseable>()("Fe
   reason: Schema.String,
 }) {}
 
+/** The feed directory could not be reached or did not answer usefully. */
+export class DirectoryUnavailable extends Schema.TaggedError<DirectoryUnavailable>()("DirectoryUnavailable", {
+  reason: Schema.String,
+}) {}
+
 /** No feed could be discovered at a given website URL. */
 export class NoFeedDiscovered extends Schema.TaggedError<NoFeedDiscovered>()("NoFeedDiscovered", {
   url: Schema.String,

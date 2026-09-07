@@ -3,6 +3,7 @@ import type {
   Category,
   DiscoveredFeed,
   CatalogPreviewItem,
+  CatalogSearch,
   CatalogTopic,
   Entry,
   EntryPage,
@@ -117,6 +118,7 @@ export const api = {
   system: {
     stats: () => request<Stats>("GET", "/api/stats"),
     catalog: () => request<ReadonlyArray<CatalogTopic>>("GET", "/api/catalog"),
+    catalogSearch: (q: string) => request<CatalogSearch>("GET", `/api/catalog/search${query({ q })}`),
     catalogPreview: (id: string) =>
       request<ReadonlyArray<CatalogPreviewItem>>("GET", `/api/catalog/${encodeURIComponent(id)}/preview`),
     refreshAll: () => request<ReadonlyArray<RefreshResult>>("POST", "/api/refresh"),

@@ -5,8 +5,8 @@ accounts: it is meant to run behind the owner login of a
 [Cloud in a Bottle](https://cloudinabottle.org) instance (or any private reverse proxy).
 
 - Subscribe by pasting a site or feed URL (RSS 2.0, Atom, RSS 1.0 and JSON Feed, with
-  autodiscovery from web pages), or browse **Discover**, a curated catalog of feeds
-  grouped by topic.
+  autodiscovery from web pages), or find one in **Discover**: live search over
+  Feedly's public directory, with reader counts and posting cadence on every result.
 - Folders, unread counts, read/unread, "read later", search, OPML import/export.
 - Background refresh with conditional requests (ETag / Last-Modified).
 - Two layouts, switchable with `1` (expanded: one column, entries open in place) and
@@ -33,7 +33,8 @@ server/   Effect v4 backend, hexagonal architecture
     inbound/mcp     MCP tools over Streamable HTTP (driving adapter)
     outbound/sqlite repositories over node:sqlite (driven adapter)
     outbound/feed   HTTP fetcher, parser, autodiscovery (driven adapter)
-    outbound/catalog  curated Discover catalog (driven adapter)
+    outbound/catalog  bundled Discover catalog (driven adapter)
+    outbound/directory  Feedly feed search (driven adapter)
   outbound/opml   OPML codec (driven adapter)
     outbound/system id generation (driven adapter)
   src/infrastructure  composition root: config + layer wiring
@@ -97,7 +98,9 @@ OpenAPI is served at `/api/openapi.json`. Main endpoints:
 - `GET /api/entries?feed=&category=&unread=&saved=&q=&cursor=`, `GET /api/entries/:id`
 - `POST /api/entries/mark`, `POST /api/entries/mark-all`, `PUT /api/entries/:id/saved`
 - `GET /api/stats`, `POST /api/refresh`, `GET /api/discover?url=`, `GET|POST /api/opml`
-- `GET /api/catalog` — the Discover directory, each entry flagged if already subscribed
+- `GET /api/catalog` — the bundled Discover topics, each entry flagged if already subscribed
+- `GET /api/catalog/search?q=` — directory search; `source` says whether the answer came
+  from the directory or fell back to the bundled catalog
 
 ## MCP
 
@@ -107,7 +110,7 @@ adapter over the same application services as the HTTP API — no separate data 
 
 Tools: `list_feeds`, `list_entries`, `get_entry`, `get_stats`, `list_categories`,
 `mark_read`, `mark_all_read`, `set_saved`, `subscribe`, `unsubscribe`, `discover_feeds`,
-`browse_catalog`, `refresh`. `get_entry` returns article text with markup stripped, which
+`browse_catalog`, `search_feeds`, `refresh`. `get_entry` returns article text with markup stripped, which
 is what an agent actually wants to read.
 
 ### Connecting
@@ -175,6 +178,24 @@ public_paths = ["/mcp"]   # only with MCP_AUTH=token and a token set
 That is deliberately not enabled: it moves `/mcp` out from behind the router's
 authentication, leaving one token as the only thing in front of your reader. Router mode
 needs no such hole in the first place.
+
+## Discover
+
+Search runs against `cloud.feedly.com/v3/search/feeds` — the index behind Feedly's own
+search box. It answers with reader counts, posts per week and an icon, which is what makes
+a result judgeable before subscribing. No account or key: this endpoint is the one Feedly
+leaves open. It is also undocumented, so the adapter treats every failure as expected —
+results are cached for 15 minutes, and when the directory cannot be reached the bundled
+catalog answers instead and the client says so.
+
+Two consequences worth knowing. Search terms leave the instance: a query is sent to Feedly
+along with nothing else — no account, no cookie, no subscription list. And the directory is
+someone else's service, so `FeedDirectory` is a port like any other (`src/domain/ports`);
+swapping in another index, or one that never leaves the machine, is a change in the
+composition root and nowhere else.
+
+The bundled catalog remains the landing page, and the fallback. It is a hand-picked list
+of about forty feeds, which is why it is worth keeping: it works with no egress at all.
 
 ## Notes
 

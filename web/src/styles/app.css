@@ -1035,8 +1035,23 @@ kbd {
 }
 .catalog-card-head {
   display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.catalog-card-heading {
+  display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+}
+/* Directory icons arrive at whatever size the publisher uploaded. */
+.catalog-card-icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--radius-s);
+  object-fit: cover;
+  background: var(--surface-2);
 }
 .catalog-card-title {
   margin: 0;
@@ -1056,6 +1071,24 @@ kbd {
   font-size: 13px;
   line-height: 1.5;
   color: var(--ink-2);
+  /* Directory descriptions are whatever the publisher wrote — some are a
+     sentence, some are a paragraph. Clamping keeps a row of cards even. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.catalog-card-reach {
+  margin: -2px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+/* A refetch dims the previous results rather than blanking the page. */
+.catalog-grid.searching {
+  opacity: 0.55;
+  transition: opacity var(--t-fast) var(--ease);
 }
 .catalog-card-foot {
   display: flex;

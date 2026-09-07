@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
 import { Effect } from "effect"
 import { z } from "zod"
-import { CatalogService } from "../../../application/CatalogService.js"
+import { CatalogService, SEARCH_LIMIT } from "../../../application/CatalogService.js"
 import { CategoryService } from "../../../application/CategoryService.js"
 import { EntryService } from "../../../application/EntryService.js"
 import { RefreshService } from "../../../application/RefreshService.js"
@@ -342,6 +342,36 @@ export const makeReaderMcpServer = Effect.gen(function* () {
             })),
           })),
         ),
+      ),
+  )
+
+  server.registerTool(
+    "search_feeds",
+    {
+      title: "Search the feed directory",
+      description:
+        "Search the wider web for feeds by topic, publication or keyword — the long tail the built-in catalog does not " +
+        "cover. Returns reach and posting cadence so you can judge a feed before subscribing. Falls back to the built-in " +
+        "catalog when the directory cannot be reached, which the answer reports.",
+      inputSchema: { query: z.string().min(1).describe("A topic, publication name or keyword, e.g. 'formula 1' or '#design'") },
+      annotations: { readOnlyHint: true },
+    },
+    ({ query }) =>
+      run(catalog.search(query, SEARCH_LIMIT), (found) =>
+        json({
+          source: found.source,
+          feeds: found.feeds.map((f) => ({
+            id: f.id,
+            title: f.title,
+            url: f.url,
+            site: f.siteUrl,
+            description: f.description,
+            subscribers: f.reach?.subscribers ?? null,
+            postsPerWeek: f.reach?.postsPerWeek ?? null,
+            lastPublished: f.reach?.lastPublishedAt ? iso(f.reach.lastPublishedAt) : null,
+            subscribed: f.subscribedAs !== null,
+          })),
+        }),
       ),
   )
 

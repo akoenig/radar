@@ -1,5 +1,6 @@
 import { Effect, Layer, Option } from "effect"
-import { FeedNotParseable, FeedUnreachable } from "../../src/domain/errors.js"
+import { DirectoryUnavailable, FeedNotParseable, FeedUnreachable } from "../../src/domain/errors.js"
+import type { CatalogFeed } from "../../src/domain/model/Catalog.js"
 import type { Category } from "../../src/domain/model/Category.js"
 import type { Entry, EntryQuery, EntryScope } from "../../src/domain/model/Entry.js"
 import type { Feed } from "../../src/domain/model/Feed.js"
@@ -8,6 +9,7 @@ import type { DiscoveredFeed, FetchOutcome, ParsedFeed } from "../../src/domain/
 import { CategoryRepository } from "../../src/domain/ports/CategoryRepository.js"
 import { EntryRepository } from "../../src/domain/ports/EntryRepository.js"
 import { FeedRepository } from "../../src/domain/ports/FeedRepository.js"
+import { FeedDirectory } from "../../src/domain/ports/FeedDirectory.js"
 import { FeedSource } from "../../src/domain/ports/FeedSource.js"
 import { IdGenerator } from "../../src/domain/ports/IdGenerator.js"
 import { UnitOfWork } from "../../src/domain/ports/UnitOfWork.js"
@@ -24,6 +26,8 @@ export interface MemoryState {
   /** Feed URL -> scripted fetch outcome. */
   readonly remote: Map<string, ParsedFeed | "unreachable" | "html">
   readonly discoverable: Map<string, ReadonlyArray<DiscoveredFeed>>
+  /** Search query -> scripted directory answer. */
+  readonly directory: Map<string, ReadonlyArray<CatalogFeed> | "unavailable">
   counter: number
 }
 
@@ -33,6 +37,7 @@ export const makeState = (): MemoryState => ({
   categories: new Map(),
   remote: new Map(),
   discoverable: new Map(),
+  directory: new Map(),
   counter: 0,
 })
 
@@ -145,6 +150,17 @@ export const MemoryFeedSource = (state: MemoryState) =>
 export const SequentialIdGenerator = (state: MemoryState) =>
   Layer.succeed(IdGenerator, { next: Effect.sync(() => `id-${++state.counter}`) })
 
+/** The directory answers only what a test scripted; anything else is empty. */
+export const MemoryDirectory = (state: MemoryState) =>
+  Layer.succeed(FeedDirectory, {
+    search: (query) => {
+      const scripted = state.directory.get(query)
+      return scripted === "unavailable"
+        ? new DirectoryUnavailable({ reason: "scripted outage" })
+        : Effect.succeed(scripted ?? [])
+    },
+  })
+
 export const PassThroughUnitOfWork = Layer.succeed(UnitOfWork, { transaction: (effect) => effect })
 
 /** Every driven port, in memory. */
@@ -154,6 +170,7 @@ export const MemoryAdapters = (state: MemoryState) =>
     MemoryEntryRepository(state),
     MemoryCategoryRepository(state),
     MemoryFeedSource(state),
+    MemoryDirectory(state),
     SequentialIdGenerator(state),
     PassThroughUnitOfWork,
   )

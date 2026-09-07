@@ -4,12 +4,13 @@ import { Effect, Fiber, Layer, Redacted } from "effect"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { HttpServerLive } from "../src/adapters/inbound/http/HttpServerLive.js"
 import { mcpAccess, type McpAccess } from "../src/adapters/inbound/mcp/McpHttp.js"
+import { directoryId } from "../src/domain/model/Catalog.js"
 import { StaticFeedCatalogLive } from "../src/adapters/outbound/catalog/StaticFeedCatalog.js"
 import { FastXmlOpmlCodecLive } from "../src/adapters/outbound/opml/FastXmlOpmlCodec.js"
 import { SqlitePersistenceLive } from "../src/adapters/outbound/sqlite/index.js"
 import { CryptoIdGeneratorLive } from "../src/adapters/outbound/system/CryptoIdGenerator.js"
 import { ApplicationLive } from "../src/application/index.js"
-import { MemoryFeedSource, makeState, parsedFeed } from "./support/InMemoryAdapters.js"
+import { MemoryDirectory, MemoryFeedSource, makeState, parsedFeed } from "./support/InMemoryAdapters.js"
 
 const TOKEN = "test-token-not-a-secret"
 const ENDPOINT = "http://127.0.0.1:3699/mcp"
@@ -21,6 +22,16 @@ const ROUTER_ENDPOINT = "http://127.0.0.1:3700/mcp"
 const makeServer = (port: number, access: McpAccess) => {
   const state = makeState()
   state.remote.set("https://example.com/rss", parsedFeed())
+  state.directory.set("racing", [
+    {
+      id: directoryId("https://racing.example/rss"),
+      title: "Racing Weekly",
+      description: "Motorsport, weekly.",
+      url: "https://racing.example/rss",
+      siteUrl: "https://racing.example",
+      reach: { iconUrl: null, subscribers: 4200, postsPerWeek: 6, lastPublishedAt: 1788552960000, topics: ["sport"] },
+    },
+  ])
   return HttpServerLive({
     host: "127.0.0.1",
     port,
@@ -31,6 +42,7 @@ const makeServer = (port: number, access: McpAccess) => {
       ApplicationLive.pipe(
         Layer.provide(SqlitePersistenceLive({ path: ":memory:" })),
         Layer.provide(MemoryFeedSource(state)),
+        Layer.provide(MemoryDirectory(state)),
         Layer.provide(CryptoIdGeneratorLive),
         Layer.provide(FastXmlOpmlCodecLive),
         Layer.provide(StaticFeedCatalogLive),
@@ -154,6 +166,16 @@ describe("MCP server", () => {
 
     const saved = JSON.parse(textOf(await client.callTool({ name: "list_entries", arguments: { savedOnly: true } })))
     expect(saved.entries).toHaveLength(1)
+    await client.close()
+  })
+
+  it("searches the feed directory through a tool", async () => {
+    const client = await connect()
+    const found = JSON.parse(
+      textOf(await client.callTool({ name: "search_feeds", arguments: { query: "racing" } })),
+    )
+    expect(found.source).toBe("directory")
+    expect(found.feeds[0]).toMatchObject({ title: "Racing Weekly", subscribers: 4200, subscribed: false })
     await client.close()
   })
 

@@ -71,6 +71,15 @@ export type ApiErrorBody =
   | { readonly _tag: "BadRequest"; readonly message: string }
   | { readonly _tag: string; readonly message?: string }
 
+/** What the directory knows beyond the address. Null for bundled entries. */
+export interface FeedReach {
+  readonly iconUrl: string | null
+  readonly subscribers: number | null
+  readonly postsPerWeek: number | null
+  readonly lastPublishedAt: number | null
+  readonly topics: ReadonlyArray<string>
+}
+
 export interface CatalogFeed {
   readonly id: string
   readonly title: string
@@ -78,6 +87,13 @@ export interface CatalogFeed {
   readonly url: string
   readonly siteUrl: string
   readonly subscribedAs: string | null
+  readonly reach: FeedReach | null
+}
+
+export interface CatalogSearch {
+  /** "bundled" means the directory was unreachable and this is the local list. */
+  readonly source: "directory" | "bundled"
+  readonly feeds: ReadonlyArray<CatalogFeed>
 }
 
 export interface CatalogPreviewItem {

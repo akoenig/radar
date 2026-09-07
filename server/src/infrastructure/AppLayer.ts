@@ -4,6 +4,7 @@ import { HttpServerLive } from "../adapters/inbound/http/HttpServerLive.js"
 import { mcpAccess } from "../adapters/inbound/mcp/McpHttp.js"
 import { RefreshSchedulerLive } from "../adapters/inbound/scheduler/RefreshScheduler.js"
 import { StaticFeedCatalogLive } from "../adapters/outbound/catalog/StaticFeedCatalog.js"
+import { FeedlyDirectoryLive } from "../adapters/outbound/directory/FeedlyDirectory.js"
 import { HttpFeedSourceLive } from "../adapters/outbound/feed/HttpFeedSource.js"
 import { ProxyAwareHttpClientLive } from "../adapters/outbound/feed/ProxyAwareHttpClient.js"
 import { FastXmlOpmlCodecLive } from "../adapters/outbound/opml/FastXmlOpmlCodec.js"
@@ -22,6 +23,7 @@ export const makeAppLayer = (config: AppConfigShape) => {
     CryptoIdGeneratorLive,
     FastXmlOpmlCodecLive,
     StaticFeedCatalogLive,
+    FeedlyDirectoryLive.pipe(Layer.provide(ProxyAwareHttpClientLive)),
   )
 
   const Application = ApplicationLive.pipe(Layer.provide(DrivenAdapters))

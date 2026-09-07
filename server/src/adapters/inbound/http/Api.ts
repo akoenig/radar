@@ -69,6 +69,15 @@ export const DiscoveredFeedDto = Schema.Struct({
   type: Schema.NullOr(Schema.String),
 })
 
+/** What a directory knows beyond the address; null for bundled entries. */
+export const FeedReachDto = Schema.Struct({
+  iconUrl: Schema.NullOr(Schema.String),
+  subscribers: Schema.NullOr(Schema.Number),
+  postsPerWeek: Schema.NullOr(Schema.Number),
+  lastPublishedAt: Schema.NullOr(Schema.Number),
+  topics: Schema.Array(Schema.String),
+})
+
 export const CatalogFeedDto = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
@@ -77,6 +86,7 @@ export const CatalogFeedDto = Schema.Struct({
   siteUrl: Schema.String,
   /** The reader's feed id when already subscribed, otherwise null. */
   subscribedAs: Schema.NullOr(Schema.String),
+  reach: Schema.NullOr(FeedReachDto),
 })
 
 export const CatalogTopicDto = Schema.Struct({
@@ -86,6 +96,13 @@ export const CatalogTopicDto = Schema.Struct({
   feeds: Schema.Array(CatalogFeedDto),
 })
 export type CatalogTopicDto = typeof CatalogTopicDto.Type
+
+export const CatalogSearchDto = Schema.Struct({
+  /** "bundled" means the directory could not be reached and this is the local list. */
+  source: Schema.Literals(["directory", "bundled"]),
+  feeds: Schema.Array(CatalogFeedDto),
+})
+export type CatalogSearchDto = typeof CatalogSearchDto.Type
 
 export const CatalogPreviewItemDto = Schema.Struct({
   title: Schema.String,
@@ -212,6 +229,10 @@ export const SystemGroup = HttpApiGroup.make("system").add(
     error: UnprocessableFeed,
   }),
   HttpApiEndpoint.get("catalog", "/catalog", { success: Schema.Array(CatalogTopicDto) }),
+  HttpApiEndpoint.get("catalogSearch", "/catalog/search", {
+    query: { q: Schema.String },
+    success: CatalogSearchDto,
+  }),
   HttpApiEndpoint.get("catalogPreview", "/catalog/:id/preview", {
     params: Id,
     success: Schema.Array(CatalogPreviewItemDto),

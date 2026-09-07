@@ -9,6 +9,7 @@ import { SubscriptionService } from "../src/application/SubscriptionService.js"
 import { StaticFeedCatalogLive } from "../src/adapters/outbound/catalog/StaticFeedCatalog.js"
 import { FastXmlOpmlCodecLive } from "../src/adapters/outbound/opml/FastXmlOpmlCodec.js"
 import { CatalogService } from "../src/application/CatalogService.js"
+import { directoryId } from "../src/domain/model/Catalog.js"
 import { MemoryAdapters, ids, makeState, parsedFeed, type MemoryState } from "./support/InMemoryAdapters.js"
 
 const run = <A, E>(
@@ -288,6 +289,53 @@ describe("CatalogService", () => {
       Effect.flatMap(CatalogService, (c) => c.preview("no-such-feed")).pipe(Effect.result),
     )
     expect(result._tag === "Failure" && result.failure._tag).toBe("CatalogEntryNotFound")
+  })
+
+  it("searches the directory and flags results already subscribed", async () => {
+    const state = makeState()
+    state.remote.set("https://example.com/rss", parsedFeed())
+    state.directory.set("racing", [
+      { id: directoryId("https://example.com/rss"), title: "Racing Weekly", description: "", url: "https://example.com/rss", siteUrl: "https://example.com" },
+      { id: directoryId("https://other.example/feed"), title: "Pit Wall", description: "", url: "https://other.example/feed", siteUrl: "https://other.example" },
+    ])
+    const feed = await run(state, Effect.flatMap(SubscriptionService, (s) => s.subscribe({ url: "https://example.com/rss" })))
+
+    const found = await run(state, Effect.flatMap(CatalogService, (c) => c.search("racing", 24)))
+
+    expect(found.source).toBe("directory")
+    expect(found.feeds.map((f) => f.title)).toEqual(["Racing Weekly", "Pit Wall"])
+    expect(found.feeds[0]!.subscribedAs).toBe(feed.id)
+    expect(found.feeds[1]!.subscribedAs).toBeNull()
+  })
+
+  it("answers from the bundled catalog when the directory is down", async () => {
+    const state = makeState()
+    state.directory.set("technology", "unavailable")
+
+    const found = await run(state, Effect.flatMap(CatalogService, (c) => c.search("technology", 24)))
+
+    expect(found.source).toBe("bundled")
+    expect(found.feeds.length).toBeGreaterThan(0)
+  })
+
+  it("keeps an empty directory answer empty instead of substituting the bundled list", async () => {
+    const state = makeState()
+    state.directory.set("technology", [])
+
+    const found = await run(state, Effect.flatMap(CatalogService, (c) => c.search("technology", 24)))
+
+    expect(found).toEqual({ source: "directory", feeds: [] })
+  })
+
+  it("previews a directory result, which is in no catalog", async () => {
+    const state = makeState()
+    state.remote.set("https://example.com/rss", parsedFeed())
+
+    const items = await run(
+      state,
+      Effect.flatMap(CatalogService, (c) => c.preview(directoryId("https://example.com/rss"))),
+    )
+    expect(items.map((i) => i.title)).toEqual(["Post A", "Post B"])
   })
 
   it("matches a subscription even when the stored URL differs by a trailing slash", async () => {
