@@ -1,4 +1,5 @@
 import { Effect } from "effect"
+import { readFile } from "node:fs/promises"
 import { describe, expect, it } from "vitest"
 import { MCP_PATH } from "../src/adapters/inbound/mcp/McpHttp.js"
 import { isPublic, publicPaths, readManifest } from "../src/infrastructure/Manifest.js"
@@ -35,5 +36,24 @@ describe("this repository's manifest", () => {
     const manifest = await Effect.runPromise(readManifest)
     expect(manifest).not.toBeNull()
     expect(isPublic(publicPaths(manifest ?? ""), MCP_PATH)).toBe(false)
+  })
+
+  it("allows mobile installers to fetch metadata and icons without exposing reader data", async () => {
+    const manifest = await Effect.runPromise(readManifest)
+    expect(manifest).not.toBeNull()
+    const paths = publicPaths(manifest ?? "")
+    const webManifest = JSON.parse(
+      await readFile(new URL("../../web/public/manifest.webmanifest", import.meta.url), "utf8"),
+    ) as { icons: Array<{ src: string }>; display: string }
+
+    expect(webManifest.display).toBe("standalone")
+    for (const path of ["/manifest.webmanifest", "/apple-touch-icon.png", "/favicon.svg", ...webManifest.icons.map((icon) => icon.src)]) {
+      expect(isPublic(paths, path), path).toBe(true)
+      // A missing asset would fall through to the HTML shell instead of an icon.
+      expect((await readFile(new URL(`../../web/public${path}`, import.meta.url))).length).toBeGreaterThan(0)
+    }
+    for (const path of ["/", "/index.html", "/api/entries", "/api/feeds", "/api/opml", MCP_PATH]) {
+      expect(isPublic(paths, path), path).toBe(false)
+    }
   })
 })

@@ -192,7 +192,16 @@ bottle app logs radar --follow
 
 Radar listens on `8080`, keeps its database under `BOTTLE_APP_DATA_DIR`, answers the
 router's health check at `/api/health`, and relies on the router's owner authentication.
-No path is public.
+Only the PWA manifest and installation icons are public, so mobile installers can
+fetch them without login cookies. The reader, API and MCP endpoint require authentication.
+For other reverse proxies, allow unauthenticated access to the same asset paths listed
+in `cloudinabottle.toml`.
+
+To install on a phone, open the deployed HTTPS URL and sign in first. On iOS, use
+Safari's **Share → Add to Home Screen** (enable **Open as Web App** if offered).
+On Android, use Chrome's **Install app** action. If an earlier install has a generic
+icon or opens in a browser tab, remove that home-screen shortcut and install again
+after the deployment updates; existing shortcuts can retain the old installation metadata.
 
 ## Keyboard
 
