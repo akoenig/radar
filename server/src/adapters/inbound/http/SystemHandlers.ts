@@ -24,6 +24,7 @@ export const SystemHandlersLive = HttpApiBuilder.group(ReaderApi, "system", (han
       .handle("refreshAll", () => refresh.refreshAll)
       .handle("discover", ({ query }) => mapDomainErrors(subscriptions.discover(query.url)))
       .handle("catalog", () => catalog.browse)
+      .handle("catalogPreview", ({ params }) => mapDomainErrors(catalog.preview(params.id)))
       .handle("exportOpml", () => opml.exportOpml)
       .handle("importOpml", ({ payload }) => mapDomainErrors(opml.importOpml(payload)))
   }),

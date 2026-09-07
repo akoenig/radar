@@ -261,6 +261,35 @@ describe("CatalogService", () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
+  it("previews the newest headlines and reuses them instead of refetching", async () => {
+    const state = makeState()
+    const target = (await run(state, Effect.flatMap(CatalogService, (c) => c.browse)))[0]!.feeds[0]!
+    state.remote.set(target.url, parsedFeed())
+
+    // Both looks must share one service instance, since the cache lives in it.
+    const { first, second } = await run(
+      state,
+      Effect.gen(function* () {
+        const catalog = yield* CatalogService
+        const first = yield* catalog.preview(target.id)
+        // A second look must not put another request on the publisher.
+        state.remote.set(target.url, "unreachable")
+        const second = yield* catalog.preview(target.id)
+        return { first, second }
+      }),
+    )
+    expect(first.map((i) => i.title)).toEqual(["Post A", "Post B"])
+    expect(second).toEqual(first)
+  })
+
+  it("reports an unknown catalog id rather than fetching nothing", async () => {
+    const result = await run(
+      makeState(),
+      Effect.flatMap(CatalogService, (c) => c.preview("no-such-feed")).pipe(Effect.result),
+    )
+    expect(result._tag === "Failure" && result.failure._tag).toBe("CatalogEntryNotFound")
+  })
+
   it("matches a subscription even when the stored URL differs by a trailing slash", async () => {
     const state = makeState()
     const target = (await run(state, Effect.flatMap(CatalogService, (c) => c.browse)))[0]!.feeds[0]!

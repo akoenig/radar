@@ -87,6 +87,12 @@ export const CatalogTopicDto = Schema.Struct({
 })
 export type CatalogTopicDto = typeof CatalogTopicDto.Type
 
+export const CatalogPreviewItemDto = Schema.Struct({
+  title: Schema.String,
+  url: Schema.NullOr(Schema.String),
+  publishedAt: Schema.NullOr(Schema.Number),
+})
+
 export const StatsDto = Schema.Struct({ unread: Schema.Number, saved: Schema.Number })
 export type StatsDto = typeof StatsDto.Type
 
@@ -206,6 +212,11 @@ export const SystemGroup = HttpApiGroup.make("system").add(
     error: UnprocessableFeed,
   }),
   HttpApiEndpoint.get("catalog", "/catalog", { success: Schema.Array(CatalogTopicDto) }),
+  HttpApiEndpoint.get("catalogPreview", "/catalog/:id/preview", {
+    params: Id,
+    success: Schema.Array(CatalogPreviewItemDto),
+    error: [NotFound, UnprocessableFeed],
+  }),
   HttpApiEndpoint.get("exportOpml", "/opml", { success: OpmlText }),
   HttpApiEndpoint.post("importOpml", "/opml", { payload: PlainText, success: ImportSummaryDto, error: BadRequest }),
 )

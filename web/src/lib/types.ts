@@ -80,6 +80,12 @@ export interface CatalogFeed {
   readonly subscribedAs: string | null
 }
 
+export interface CatalogPreviewItem {
+  readonly title: string
+  readonly url: string | null
+  readonly publishedAt: number | null
+}
+
 export interface CatalogTopic {
   readonly id: string
   readonly name: string

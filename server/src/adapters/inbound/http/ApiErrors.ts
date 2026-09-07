@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect"
 import type {
+  CatalogEntryNotFound,
   CategoryNotFound,
   EntryNotFound,
   FeedAlreadyExists,
@@ -17,7 +18,7 @@ import type {
  */
 export class NotFound extends Schema.TaggedError<NotFound>()(
   "NotFound",
-  { resource: Schema.Literals(["feed", "entry", "category"]), id: Schema.String },
+  { resource: Schema.Literals(["feed", "entry", "category", "catalog"]), id: Schema.String },
   { httpApiStatus: 404 },
 ) {}
 
@@ -44,6 +45,7 @@ export class BadRequest extends Schema.TaggedError<BadRequest>()(
 ) {}
 
 type DomainError =
+  | CatalogEntryNotFound
   | FeedNotFound
   | EntryNotFound
   | CategoryNotFound
@@ -64,6 +66,8 @@ export const toApiError = (error: DomainError): ApiError => {
       return new NotFound({ resource: "entry", id: error.id })
     case "CategoryNotFound":
       return new NotFound({ resource: "category", id: error.id })
+    case "CatalogEntryNotFound":
+      return new NotFound({ resource: "catalog", id: error.id })
     case "FeedAlreadyExists":
       return new Conflict({ message: `Already subscribed to ${error.url}`, existingId: error.existingId })
     case "InvalidFeedUrl":
@@ -80,7 +84,7 @@ export const toApiError = (error: DomainError): ApiError => {
 }
 
 /** The API error a given domain error maps to, so handlers keep precise error types. */
-export type ToApiError<E> = E extends FeedNotFound | EntryNotFound | CategoryNotFound
+export type ToApiError<E> = E extends FeedNotFound | EntryNotFound | CategoryNotFound | CatalogEntryNotFound
   ? NotFound
   : E extends FeedAlreadyExists
     ? Conflict

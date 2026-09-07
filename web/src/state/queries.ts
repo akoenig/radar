@@ -15,6 +15,9 @@ export const keys = {
   categories: ["categories"] as const,
   stats: ["stats"] as const,
   catalog: ["catalog"] as const,
+  // Deliberately not nested under `catalog`: invalidating the catalog after a
+  // subscribe must not re-fetch every open preview from its publisher.
+  catalogPreview: (id: string) => ["catalog-preview", id] as const,
   entries: (view: View, unreadOnly: boolean, search: string) => ["entries", view, unreadOnly, search] as const,
   entry: (id: string) => ["entry", id] as const,
 }
@@ -32,6 +35,16 @@ export const useStats = () =>
 
 export const useCatalog = (enabled: boolean) =>
   useQuery({ queryKey: keys.catalog, queryFn: api.system.catalog, enabled, staleTime: 5 * 60_000 })
+
+/** Fetched only once a card is opened, and kept for the session. */
+export const useCatalogPreview = (id: string, enabled: boolean) =>
+  useQuery({
+    queryKey: keys.catalogPreview(id),
+    queryFn: () => api.system.catalogPreview(id),
+    enabled,
+    staleTime: 10 * 60_000,
+    retry: false,
+  })
 
 export const useEntries = (view: View, unreadOnly: boolean, search: string) => {
   const query = useInfiniteQuery({

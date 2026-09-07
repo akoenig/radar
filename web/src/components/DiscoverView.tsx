@@ -1,22 +1,48 @@
 import { useMemo, useState } from "react"
 import { ApiError } from "../lib/api"
+import { formatRelative } from "../lib/time"
 import type { CatalogFeed, CatalogTopic } from "../lib/types"
-import { useCatalog, useSubscribe } from "../state/queries"
+import { useCatalog, useCatalogPreview, useSubscribe } from "../state/queries"
 import { useStore } from "../state/store"
 import { hostOf } from "./Article"
-import { CheckAllIcon, MenuIcon, PlusIcon, SearchIcon } from "./Icons"
+import { CheckAllIcon, ChevronIcon, MenuIcon, PlusIcon, SearchIcon } from "./Icons"
 import { useToast } from "./Toast"
 
 const matches = (feed: CatalogFeed, needle: string) =>
   `${feed.title} ${feed.description} ${feed.siteUrl}`.toLowerCase().includes(needle)
 
-const Card = ({ feed, topicName }: { feed: CatalogFeed; topicName: string }) => {
+/** The newest few headlines, fetched only when a card is opened. */
+const Preview = ({ id }: { id: string }) => {
+  const preview = useCatalogPreview(id, true)
+  if (preview.isLoading) return <p className="catalog-preview-status">Fetching the latest posts…</p>
+  if (preview.isError) return <p className="catalog-preview-status">Couldn’t reach this feed just now.</p>
+  if (!preview.data || preview.data.length === 0) return <p className="catalog-preview-status">This feed has no recent posts.</p>
+  return (
+    <ul className="catalog-preview">
+      {preview.data.map((item, i) => (
+        <li key={`${item.url ?? item.title}-${i}`}>
+          {item.url ? (
+            <a href={item.url} target="_blank" rel="noopener noreferrer">
+              {item.title}
+            </a>
+          ) : (
+            <span>{item.title}</span>
+          )}
+          {item.publishedAt !== null && <time dateTime={new Date(item.publishedAt).toISOString()}>{formatRelative(item.publishedAt)}</time>}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+const Card = ({ feed }: { feed: CatalogFeed }) => {
   const { dispatch } = useStore()
   const toast = useToast()
   const subscribe = useSubscribe()
   const [pending, setPending] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  const open = () => feed.subscribedAs && dispatch({ type: "setView", view: { kind: "feed", id: feed.subscribedAs } })
+  const openFeed = () => feed.subscribedAs && dispatch({ type: "setView", view: { kind: "feed", id: feed.subscribedAs } })
 
   const add = async () => {
     setPending(true)
@@ -51,9 +77,17 @@ const Card = ({ feed, topicName }: { feed: CatalogFeed; topicName: string }) => 
       </div>
       <p className="catalog-card-body">{feed.description}</p>
       <div className="catalog-card-foot">
-        <span className="catalog-card-topic">{topicName}</span>
+        <button
+          type="button"
+          className="catalog-preview-toggle"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+        >
+          <ChevronIcon size={12} className={open ? "rotated" : ""} />
+          {open ? "Hide posts" : "Latest posts"}
+        </button>
         {subscribed ? (
-          <button type="button" className="button subtle" onClick={open}>
+          <button type="button" className="button subtle" onClick={openFeed}>
             <CheckAllIcon size={14} /> Subscribed
           </button>
         ) : (
@@ -62,6 +96,7 @@ const Card = ({ feed, topicName }: { feed: CatalogFeed; topicName: string }) => 
           </button>
         )}
       </div>
+      {open && <Preview id={feed.id} />}
     </li>
   )
 }
@@ -142,7 +177,7 @@ export const DiscoverView = ({ onOpenSidebar }: { onOpenSidebar: () => void }) =
             </div>
             <ul className="catalog-grid">
               {topic.feeds.map((feed) => (
-                <Card key={feed.id} feed={feed} topicName={topic.name} />
+                <Card key={feed.id} feed={feed} />
               ))}
             </ul>
           </section>

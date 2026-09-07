@@ -40,6 +40,11 @@ export class NoFeedDiscovered extends Schema.TaggedError<NoFeedDiscovered>()("No
   url: Schema.String,
 }) {}
 
+/** A catalog id that is not in the bundled directory. */
+export class CatalogEntryNotFound extends Schema.TaggedError<CatalogEntryNotFound>()("CatalogEntryNotFound", {
+  id: Schema.String,
+}) {}
+
 export class InvalidOpml extends Schema.TaggedError<InvalidOpml>()("InvalidOpml", {
   reason: Schema.String,
 }) {}
