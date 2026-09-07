@@ -27,7 +27,6 @@ app_data = true
 
 [routing]
 health_check = "/api/health"
-public_paths = ["/mcp"]
 # No public paths on purpose. The reader, including /mcp, stays behind the
 # platform's authentication — which an MCP client satisfies with a token from
 # `bottle tokens create`, so nothing here needs to be opened up. MCP_AUTH=router
@@ -39,4 +38,3 @@ service = "github.com/imbue-openhost/openhost/services/secrets"
 shortname = "secrets"
 version = ">=0.1.0"
 grants = [{key = "READER_MCP_TOKEN"}]
-public_paths = ["/mcp"]
