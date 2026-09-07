@@ -35,6 +35,19 @@ export const FeedsHandlersLive = HttpApiBuilder.group(RadarApi, "feeds", (handle
           }),
         ).pipe(Effect.flatMap((feed) => mapDomainErrors(withCounts(feed.id)))),
       )
+      // Answers with the whole list, in its new order, so the client can swap
+      // its cache wholesale instead of reconciling a partial response.
+      .handle("reorder", ({ payload }) =>
+        mapDomainErrors(
+          subscriptions.reorder(
+            payload.items.map((item) => ({
+              id: FeedId.make(item.id),
+              categoryId: item.categoryId === null ? null : CategoryId.make(item.categoryId),
+              position: item.position,
+            })),
+          ),
+        ).pipe(Effect.flatMap(() => Effect.map(subscriptions.list, (all) => all.map(({ feed, unread }) => feedToDto(feed, unread))))),
+      )
       .handle("unsubscribe", ({ params }) => mapDomainErrors(subscriptions.unsubscribe(FeedId.make(params.id))))
       .handle("refresh", ({ params }) => mapDomainErrors(refresh.refreshFeed(FeedId.make(params.id))))
   }),

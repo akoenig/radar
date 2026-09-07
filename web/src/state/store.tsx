@@ -28,6 +28,8 @@ export interface State {
   readonly layout: Layout
   readonly density: Density
   readonly sidebarOpen: boolean
+  /** Desktop sidebar width in pixels. Ignored while the sidebar is an overlay. */
+  readonly sidebarWidth: number
   /** Which pane is visible on narrow screens. */
   readonly mobilePane: "list" | "article"
   readonly collapsed: ReadonlySet<string>
@@ -45,6 +47,7 @@ export type Action =
   | { type: "setLayout"; layout: Layout }
   | { type: "setDensity"; density: Density }
   | { type: "setSidebarOpen"; open: boolean }
+  | { type: "setSidebarWidth"; width: number }
   | { type: "setMobilePane"; pane: "list" | "article" }
   | { type: "toggleCollapsed"; id: string }
 
@@ -54,7 +57,14 @@ const STORAGE = {
   layout: "radar.layout",
   density: "radar.density",
   collapsed: "radar.collapsed",
+  sidebarWidth: "radar.sidebarWidth",
 }
+
+/** Keeps the drag from squeezing the tree to nothing or eating the list pane. */
+export const SIDEBAR_MIN = 190
+export const SIDEBAR_MAX = 460
+export const SIDEBAR_DEFAULT = 240
+export const clampSidebarWidth = (width: number) => Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, Math.round(width)))
 
 const read = <T,>(key: string, fallback: T, parse: (raw: string) => T): T => {
   try {
@@ -110,6 +120,10 @@ const initialState = (): State => ({
   layout: read(STORAGE.layout, "split", (r) => (r === "stream" ? "stream" : "split")),
   density: read(STORAGE.density, "cozy", (r) => (r === "compact" ? "compact" : "cozy")),
   sidebarOpen: false,
+  sidebarWidth: read(STORAGE.sidebarWidth, SIDEBAR_DEFAULT, (r) => {
+    const parsed = Number(r)
+    return Number.isFinite(parsed) ? clampSidebarWidth(parsed) : SIDEBAR_DEFAULT
+  }),
   mobilePane: "list",
   collapsed: read(STORAGE.collapsed, new Set<string>(), (r) => new Set(JSON.parse(r) as string[])),
 })
@@ -140,6 +154,8 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, layout: action.layout, mobilePane: action.layout === "stream" ? "list" : state.mobilePane }
     case "setSidebarOpen":
       return { ...state, sidebarOpen: action.open }
+    case "setSidebarWidth":
+      return { ...state, sidebarWidth: clampSidebarWidth(action.width) }
     case "setMobilePane":
       return { ...state, mobilePane: action.pane }
     case "toggleCollapsed": {
@@ -161,6 +177,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => write(STORAGE.collapsed, JSON.stringify([...state.collapsed])), [state.collapsed])
   useEffect(() => write(STORAGE.layout, state.layout), [state.layout])
   useEffect(() => write(STORAGE.density, state.density), [state.density])
+  useEffect(() => write(STORAGE.sidebarWidth, String(state.sidebarWidth)), [state.sidebarWidth])
   useEffect(() => {
     write(STORAGE.theme, state.theme)
     const root = document.documentElement

@@ -247,7 +247,7 @@ kbd {
 
 .app {
   display: grid;
-  grid-template-columns: var(--sidebar-w) var(--list-w) minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-user-w, var(--sidebar-w)) var(--list-w) minmax(0, 1fr);
   height: 100dvh;
   background: var(--bg);
 }
@@ -266,10 +266,60 @@ kbd {
    ------------------------------------------------------------------------- */
 
 .sidebar {
+  position: relative;
   background: var(--bg);
   border-right: 1px solid var(--line);
   padding: 14px 8px 10px;
   overflow: hidden;
+}
+
+/* The split between the sidebar and the list. It sits in the sidebar's own
+   right-hand padding, clear of the tree's scrollbar. */
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 8px;
+  z-index: 5;
+  cursor: col-resize;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar-resizer-grip {
+  width: 2px;
+  height: 28px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  opacity: 0;
+  transition: opacity var(--t-fast) var(--ease);
+}
+.sidebar-resizer:hover .sidebar-resizer-grip,
+.sidebar-resizer:focus-visible .sidebar-resizer-grip,
+body.resizing-sidebar .sidebar-resizer-grip {
+  opacity: 1;
+}
+.sidebar-resizer:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 3px;
+}
+
+/* While dragging the split, nothing else should react to the pointer. */
+body.resizing-sidebar {
+  cursor: col-resize;
+  user-select: none;
+}
+body.resizing-sidebar .sidebar,
+body.resizing-sidebar .list-pane,
+body.resizing-sidebar .reading-pane {
+  pointer-events: none;
+}
+/* ...except the handle itself, which is still capturing the pointer. */
+body.resizing-sidebar .sidebar-resizer {
+  pointer-events: auto;
 }
 
 .brand {
@@ -433,6 +483,60 @@ kbd {
 .feed-warning {
   color: var(--gold);
   flex: none;
+}
+
+/* --- Drag and drop ------------------------------------------------------- */
+
+.tree-item[draggable="true"],
+.tree-group > .category-row[draggable="true"] {
+  cursor: grab;
+}
+.tree-item.dragging,
+.tree-group.dragging {
+  opacity: 0.4;
+}
+/* The row being dragged over must not also flash its hover affordances. */
+.tree.dragging-within .tree-more {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Insertion line. The rows are 1px apart, so it is drawn on the boundary. */
+.tree-item.drop-before::before,
+.tree-item.drop-after::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}
+.tree-item.drop-before::before {
+  top: -1px;
+}
+.tree-item.drop-after::after {
+  bottom: -1px;
+}
+
+/* Dropping *into* a folder highlights the whole target instead. */
+.tree-item.drop-into,
+.tree-empty.drop-into,
+.tree-dropzone.drop-into {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: var(--radius-s);
+}
+
+.tree-dropzone {
+  margin: 6px 4px 0;
+  padding: 8px 10px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
 }
 
 .feed-icon {
@@ -796,7 +900,7 @@ kbd {
 /* --- Stream layout: one wide column, entries expand in place -------------- */
 
 .app.layout-stream {
-  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-user-w, var(--sidebar-w)) minmax(0, 1fr);
 }
 .list-pane.stream {
   border-right: 0;
@@ -1796,7 +1900,7 @@ kbd {
 
 @media (min-width: 1441px) {
   .app {
-    grid-template-columns: var(--sidebar-w) clamp(400px, 26vw, 480px) minmax(0, 1fr);
+    grid-template-columns: var(--sidebar-user-w, var(--sidebar-w)) clamp(400px, 26vw, 480px) minmax(0, 1fr);
   }
 }
 
@@ -1823,6 +1927,10 @@ kbd {
   .sidebar.open {
     transform: none;
     box-shadow: var(--shadow-2);
+  }
+  /* An overlay sidebar has no split to drag. */
+  .sidebar-resizer {
+    display: none;
   }
   .sidebar-scrim {
     position: fixed;

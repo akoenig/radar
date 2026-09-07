@@ -254,6 +254,49 @@ export const useUpdateFeed = () => {
   })
 }
 
+/**
+ * Sidebar drag-and-drop. The arrangement is applied to the cache immediately —
+ * the row must land where it was dropped, not a round-trip later — and the
+ * server's answer (the full list, re-sorted) replaces it when it arrives.
+ */
+export const useReorderFeeds = () => {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (items: ReadonlyArray<{ id: string; categoryId: string | null; position: number }>) =>
+      api.feeds.reorder(items),
+    onMutate: (items) => {
+      const placements = new Map(items.map((i) => [i.id, i]))
+      client.setQueryData<ReadonlyArray<Feed>>(keys.feeds, (feeds) =>
+        feeds
+          ?.map((feed) => {
+            const placement = placements.get(feed.id)
+            return placement ? { ...feed, categoryId: placement.categoryId, position: placement.position } : feed
+          })
+          .sort((a, b) => a.position - b.position || a.title.localeCompare(b.title)),
+      )
+    },
+    onSuccess: (feeds) => client.setQueryData<ReadonlyArray<Feed>>(keys.feeds, feeds),
+    onError: () => client.invalidateQueries({ queryKey: keys.feeds }),
+  })
+}
+
+export const useReorderCategories = () => {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (items: ReadonlyArray<{ id: string; position: number }>) => api.categories.reorder(items),
+    onMutate: (items) => {
+      const positions = new Map(items.map((i) => [i.id, i.position]))
+      client.setQueryData<ReadonlyArray<Category>>(keys.categories, (categories) =>
+        categories
+          ?.map((c) => ({ ...c, position: positions.get(c.id) ?? c.position }))
+          .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name)),
+      )
+    },
+    onSuccess: (categories) => client.setQueryData<ReadonlyArray<Category>>(keys.categories, categories),
+    onError: () => client.invalidateQueries({ queryKey: keys.categories }),
+  })
+}
+
 export const useUnsubscribe = () => {
   const client = useQueryClient()
   return useMutation({ mutationFn: (id: string) => api.feeds.remove(id), onSuccess: () => invalidateAll(client) })

@@ -138,6 +138,17 @@ export const FeedPatchPayload = Schema.Struct({
   position: Schema.optionalKey(Schema.Number),
 })
 
+/** One row of a sidebar arrangement: the feed, its folder and its rank. */
+export const FeedPlacementPayload = Schema.Struct({
+  items: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      categoryId: Schema.NullOr(Schema.String),
+      position: Schema.Number,
+    }),
+  ),
+})
+
 export const FeedsGroup = HttpApiGroup.make("feeds")
   .add(
     HttpApiEndpoint.get("list", "/", { success: Schema.Array(FeedDto) }),
@@ -151,6 +162,11 @@ export const FeedsGroup = HttpApiGroup.make("feeds")
       payload: FeedPatchPayload,
       success: FeedDto,
       error: [NotFound, Conflict],
+    }),
+    HttpApiEndpoint.post("reorder", "/order", {
+      payload: FeedPlacementPayload,
+      success: Schema.Array(FeedDto),
+      error: NotFound,
     }),
     HttpApiEndpoint.make("DELETE")("unsubscribe", "/:id", { params: Id, error: NotFound }),
     HttpApiEndpoint.post("refresh", "/:id/refresh", { params: Id, success: RefreshResultDto, error: NotFound }),
@@ -167,11 +183,20 @@ export const CategoryPatchPayload = Schema.Struct({
   position: Schema.optionalKey(Schema.Number),
 })
 
+export const CategoryOrderPayload = Schema.Struct({
+  items: Schema.Array(Schema.Struct({ id: Schema.String, position: Schema.Number })),
+})
+
 export const CategoriesGroup = HttpApiGroup.make("categories")
   .add(
     HttpApiEndpoint.get("list", "/", { success: Schema.Array(CategoryDto) }),
     HttpApiEndpoint.post("create", "/", { payload: CategoryPayload, success: CategoryDto }),
     HttpApiEndpoint.patch("update", "/:id", { params: Id, payload: CategoryPatchPayload, success: CategoryDto, error: NotFound }),
+    HttpApiEndpoint.post("reorder", "/order", {
+      payload: CategoryOrderPayload,
+      success: Schema.Array(CategoryDto),
+      error: NotFound,
+    }),
     HttpApiEndpoint.make("DELETE")("remove", "/:id", { params: Id, error: NotFound }),
   )
   .prefix("/categories")

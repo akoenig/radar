@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react"
 import { AddFeedDialog, CategoriesDialog, EditFeedDialog, OpmlDialog, ShortcutsDialog } from "./components/dialogs"
 import { DiscoverView } from "./components/DiscoverView"
 import { EntryList } from "./components/EntryList"
@@ -236,6 +236,8 @@ export const App = () => {
   return (
     <div
       className={`app layout-${discovering ? "stream" : state.layout} pane-${stream || discovering ? "list" : state.mobilePane}${state.sidebarOpen ? " sidebar-open" : ""}`}
+      // Only the desktop grid reads this; the overlay sidebar keeps its default width.
+      style={{ "--sidebar-user-w": `${state.sidebarWidth}px` } as CSSProperties}
     >
       <Sidebar />
       {state.sidebarOpen && <div className="sidebar-scrim only-narrow" onClick={() => dispatch({ type: "setSidebarOpen", open: false })} />}
