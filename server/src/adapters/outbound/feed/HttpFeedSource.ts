@@ -7,7 +7,7 @@ import { COMMON_FEED_PATHS, discoverInHtml } from "./FeedDiscovery.js"
 import { ParseError, parseFeed } from "./FeedParser.js"
 import { decodeBody, looksLikeHtml } from "./text.js"
 
-export const USER_AGENT = "Reader/0.1 (feed fetcher)"
+export const USER_AGENT = "Radar/0.1 (feed fetcher)"
 const ACCEPT =
   "application/rss+xml, application/atom+xml, application/feed+json, application/rdf+xml, application/xml;q=0.9, text/xml;q=0.8, text/html;q=0.5, */*;q=0.2"
 const TIMEOUT = Duration.seconds(25)

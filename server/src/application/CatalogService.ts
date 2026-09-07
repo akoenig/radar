@@ -47,7 +47,7 @@ export interface CatalogServiceShape {
   readonly preview: (id: string) => Effect.Effect<ReadonlyArray<PreviewItem>, PreviewError>
 }
 
-export class CatalogService extends Context.Service<CatalogService, CatalogServiceShape>()("@reader/CatalogService") {}
+export class CatalogService extends Context.Service<CatalogService, CatalogServiceShape>()("@radar/CatalogService") {}
 
 /** Results per search. Enough to scroll, few enough to stay one request. */
 export const SEARCH_LIMIT = 24

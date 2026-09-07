@@ -3,14 +3,14 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { RefreshService } from "../../../application/RefreshService.js"
 import { SubscriptionService } from "../../../application/SubscriptionService.js"
 import { CategoryId, FeedId } from "../../../domain/model/Ids.js"
-import { ReaderApi } from "./Api.js"
+import { RadarApi } from "./Api.js"
 import { mapDomainErrors } from "./ApiErrors.js"
 import { feedToDto } from "./mappers.js"
 
 const categoryId = (value: string | null | undefined): CategoryId | null | undefined =>
   value === undefined ? undefined : value === null ? null : CategoryId.make(value)
 
-export const FeedsHandlersLive = HttpApiBuilder.group(ReaderApi, "feeds", (handlers) =>
+export const FeedsHandlersLive = HttpApiBuilder.group(RadarApi, "feeds", (handlers) =>
   Effect.gen(function* () {
     const subscriptions = yield* SubscriptionService
     const refresh = yield* RefreshService

@@ -8,4 +8,4 @@ export interface UnitOfWorkShape {
   readonly transaction: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 }
 
-export class UnitOfWork extends Context.Service<UnitOfWork, UnitOfWorkShape>()("@reader/UnitOfWork") {}
+export class UnitOfWork extends Context.Service<UnitOfWork, UnitOfWorkShape>()("@radar/UnitOfWork") {}

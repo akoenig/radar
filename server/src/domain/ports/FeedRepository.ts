@@ -18,5 +18,5 @@ export interface FeedRepositoryShape {
 }
 
 export class FeedRepository extends Context.Service<FeedRepository, FeedRepositoryShape>()(
-  "@reader/FeedRepository",
+  "@radar/FeedRepository",
 ) {}

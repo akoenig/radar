@@ -11,4 +11,4 @@ export interface FeedDirectoryShape {
   readonly search: (query: string, limit: number) => Effect.Effect<ReadonlyArray<CatalogFeed>, DirectoryUnavailable>
 }
 
-export class FeedDirectory extends Context.Service<FeedDirectory, FeedDirectoryShape>()("@reader/FeedDirectory") {}
+export class FeedDirectory extends Context.Service<FeedDirectory, FeedDirectoryShape>()("@radar/FeedDirectory") {}

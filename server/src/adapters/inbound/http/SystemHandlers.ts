@@ -5,7 +5,7 @@ import { EntryService } from "../../../application/EntryService.js"
 import { OpmlService } from "../../../application/OpmlService.js"
 import { RefreshService } from "../../../application/RefreshService.js"
 import { SubscriptionService } from "../../../application/SubscriptionService.js"
-import { ReaderApi } from "./Api.js"
+import { RadarApi } from "./Api.js"
 import { mapDomainErrors } from "./ApiErrors.js"
 
 export const APP_VERSION = "0.1.0"
@@ -16,7 +16,7 @@ export const APP_VERSION = "0.1.0"
  */
 const feedDto = (feed: BrowsableFeed) => ({ ...feed, reach: feed.reach ?? null })
 
-export const SystemHandlersLive = HttpApiBuilder.group(ReaderApi, "system", (handlers) =>
+export const SystemHandlersLive = HttpApiBuilder.group(RadarApi, "system", (handlers) =>
   Effect.gen(function* () {
     const entries = yield* EntryService
     const refresh = yield* RefreshService

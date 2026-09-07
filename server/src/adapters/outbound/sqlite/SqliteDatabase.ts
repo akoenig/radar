@@ -20,10 +20,10 @@ export interface SqliteDatabaseShape {
   readonly transaction: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 }
 
-export class SqliteDatabase extends Context.Service<SqliteDatabase, SqliteDatabaseShape>()("@reader/SqliteDatabase") {}
+export class SqliteDatabase extends Context.Service<SqliteDatabase, SqliteDatabaseShape>()("@radar/SqliteDatabase") {}
 
 /** Tracks whether the current fiber already runs inside a transaction. */
-const InTransaction = Context.Reference<boolean>("@reader/SqliteDatabase/InTransaction", { defaultValue: () => false })
+const InTransaction = Context.Reference<boolean>("@radar/SqliteDatabase/InTransaction", { defaultValue: () => false })
 
 export interface SqliteOptions {
   /** File path, or ":memory:". */

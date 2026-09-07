@@ -10,7 +10,7 @@ import { resolve } from "node:path"
  * otherwise be pulled into the page bundle.
  */
 const serviceWorker = (): Plugin => ({
-  name: "reader-service-worker",
+  name: "radar-service-worker",
   apply: "build",
   enforce: "post",
   closeBundle: {

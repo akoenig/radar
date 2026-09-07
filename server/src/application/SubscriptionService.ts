@@ -54,7 +54,7 @@ export interface SubscriptionServiceShape {
 }
 
 export class SubscriptionService extends Context.Service<SubscriptionService, SubscriptionServiceShape>()(
-  "@reader/SubscriptionService",
+  "@radar/SubscriptionService",
 ) {}
 
 export const SubscriptionServiceLive = Layer.effect(

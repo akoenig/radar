@@ -1,7 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { Effect, Layer, Redacted } from "effect"
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
-import { makeReaderMcpServer } from "./ReaderMcpServer.js"
+import { makeRadarMcpServer } from "./RadarMcpServer.js"
 
 export const MCP_PATH = "/mcp"
 
@@ -39,7 +39,7 @@ const disabled = HttpServerResponse.jsonUnsafe(
 
 const unauthorized = HttpServerResponse.jsonUnsafe(
   { error: "unauthorized", message: "Send Authorization: Bearer <MCP_TOKEN>." },
-  { status: 401, headers: { "www-authenticate": 'Bearer realm="reader"' } },
+  { status: 401, headers: { "www-authenticate": 'Bearer realm="radar"' } },
 )
 
 /** Constant-time compare, so a wrong token cannot be found one byte at a time. */
@@ -57,7 +57,7 @@ const bearer = (header: string | undefined): string | null => {
 }
 
 /**
- * Serves the reader's tools over MCP's Streamable HTTP transport.
+ * Serves Radar's tools over MCP's Streamable HTTP transport.
  *
  * Stateless: a fresh server and transport per request, since every tool is a
  * single call with no subscriptions to keep alive. That means no session table
@@ -70,7 +70,7 @@ const bearer = (header: string | undefined): string | null => {
  * The route is registered either way. Leaving it unregistered when disabled
  * does not make the path unreachable, it makes it *someone else's*: the static
  * server's single-page fallback answers any extensionless path that accepts
- * HTML, so a browser at /mcp was handed the reader itself, which then routed to
+ * HTML, so a browser at /mcp was handed Radar itself, which then routed to
  * #/all. An API path answering with the app is worse than a plain refusal, so
  * this owns the path and says why it is closed.
  */
@@ -89,7 +89,7 @@ export const McpHttpLive = (access: McpAccess) =>
         return unauthorized
       }
 
-      const server = yield* makeReaderMcpServer
+      const server = yield* makeRadarMcpServer
       // enableJsonResponse: a tool call is one request and one reply, so a
       // buffered JSON body is both simpler and safe to hand on after the
       // transport is torn down. Left as SSE, the body would stream.

@@ -1,14 +1,14 @@
 {
-  "name": "reader",
+  "name": "radar",
   "private": true,
   "version": "0.1.0",
   "description": "A modern, keyboard-first feed reader in the spirit of Google Reader",
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
-    "build": "pnpm --filter @reader/web build && pnpm --filter @reader/server build",
-    "start": "pnpm --filter @reader/server start",
-    "test": "pnpm --filter @reader/server test",
+    "build": "pnpm --filter @radar/web build && pnpm --filter @radar/server build",
+    "start": "pnpm --filter @radar/server start",
+    "test": "pnpm --filter @radar/server test",
     "typecheck": "pnpm -r typecheck"
   }
 }

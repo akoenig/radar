@@ -22,7 +22,7 @@ export interface AppConfigShape {
   readonly mcpAuth: "router" | "token"
 }
 
-export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("@reader/AppConfig") {}
+export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("@radar/AppConfig") {}
 
 /** `<repo>/web/dist`, whether running from `src/` via tsx or from `dist/`. */
 const defaultStaticDir = fileURLToPath(new URL("../../../web/dist", import.meta.url))
@@ -37,7 +37,7 @@ export const loadConfig: Effect.Effect<AppConfigShape, Config.ConfigError> = Eff
   const port = yield* Config.port("PORT").pipe(Config.withDefault(8080))
   const bottleDataDir = yield* Config.string("BOTTLE_APP_DATA_DIR").pipe(Config.withDefault(""))
   const dataDir = yield* Config.string("DATA_DIR").pipe(Config.withDefault(bottleDataDir || resolve("data")))
-  const databasePath = yield* Config.string("DATABASE_PATH").pipe(Config.withDefault(resolve(dataDir, "reader.db")))
+  const databasePath = yield* Config.string("DATABASE_PATH").pipe(Config.withDefault(resolve(dataDir, "radar.db")))
   const staticDir = yield* Config.string("STATIC_DIR").pipe(Config.withDefault(defaultStaticDir))
   const refreshMinutes = yield* Config.number("REFRESH_INTERVAL_MINUTES").pipe(Config.withDefault(15))
   const mcpSecret = yield* Config.string("MCP_TOKEN").pipe(Config.withDefault(""))

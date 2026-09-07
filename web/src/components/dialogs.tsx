@@ -328,7 +328,7 @@ export const OpmlDialog = () => {
         <div className="card">
           <h3>Export</h3>
           <p>Download your folders and subscriptions.</p>
-          <a className="button" href={api.system.exportOpmlUrl} download="reader-subscriptions.opml">
+          <a className="button" href={api.system.exportOpmlUrl} download="radar-subscriptions.opml">
             Download OPML
           </a>
         </div>

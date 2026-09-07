@@ -28,5 +28,5 @@ export interface EntryRepositoryShape {
 }
 
 export class EntryRepository extends Context.Service<EntryRepository, EntryRepositoryShape>()(
-  "@reader/EntryRepository",
+  "@radar/EntryRepository",
 ) {}

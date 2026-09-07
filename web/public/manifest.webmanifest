@@ -1,6 +1,6 @@
 {
-  "name": "Reader",
-  "short_name": "Reader",
+  "name": "Radar",
+  "short_name": "Radar",
   "description": "A keyboard-first feed reader in the spirit of Google Reader.",
   "id": "/",
   "start_url": "/",

@@ -19,7 +19,7 @@ export interface RefreshServiceShape {
   readonly refreshAll: Effect.Effect<ReadonlyArray<RefreshResult>>
 }
 
-export class RefreshService extends Context.Service<RefreshService, RefreshServiceShape>()("@reader/RefreshService") {}
+export class RefreshService extends Context.Service<RefreshService, RefreshServiceShape>()("@radar/RefreshService") {}
 
 /** How many feeds are fetched at once during a full refresh. */
 export const REFRESH_CONCURRENCY = 6

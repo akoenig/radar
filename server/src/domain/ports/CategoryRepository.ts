@@ -11,5 +11,5 @@ export interface CategoryRepositoryShape {
 }
 
 export class CategoryRepository extends Context.Service<CategoryRepository, CategoryRepositoryShape>()(
-  "@reader/CategoryRepository",
+  "@radar/CategoryRepository",
 ) {}

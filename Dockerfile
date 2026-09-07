@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=${PNPM_STORE} \
 
 COPY server server
 COPY web web
-RUN pnpm --filter @reader/web build && pnpm --filter @reader/server build
+RUN pnpm --filter @radar/web build && pnpm --filter @radar/server build
 
 # ---- runtime -------------------------------------------------------------
 FROM node:${NODE_VERSION}-slim AS runtime
@@ -41,7 +41,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY server/package.json server/
 COPY web/package.json web/
 RUN --mount=type=cache,target=${PNPM_STORE} \
-    pnpm install --frozen-lockfile --prod --filter @reader/server --store-dir ${PNPM_STORE}
+    pnpm install --frozen-lockfile --prod --filter @radar/server --store-dir ${PNPM_STORE}
 
 COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/web/dist web/dist

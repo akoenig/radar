@@ -49,11 +49,11 @@ export type Action =
   | { type: "toggleCollapsed"; id: string }
 
 const STORAGE = {
-  unreadOnly: "reader.unreadOnly",
-  theme: "reader.theme",
-  layout: "reader.layout",
-  density: "reader.density",
-  collapsed: "reader.collapsed",
+  unreadOnly: "radar.unreadOnly",
+  theme: "radar.theme",
+  layout: "radar.layout",
+  density: "radar.density",
+  collapsed: "radar.collapsed",
 }
 
 const read = <T,>(key: string, fallback: T, parse: (raw: string) => T): T => {

@@ -5,8 +5,8 @@ declare const self: ServiceWorkerGlobalScope
 declare const __PRECACHE__: ReadonlyArray<string>
 declare const __VERSION__: string
 
-const SHELL = `reader-shell-${__VERSION__}`
-const DATA = "reader-data-v1"
+const SHELL = `radar-shell-${__VERSION__}`
+const DATA = "radar-data-v1"
 
 const isApiGet = (request: Request, url: URL) => request.method === "GET" && url.pathname.startsWith("/api/")
 

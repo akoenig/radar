@@ -4,4 +4,4 @@ export interface IdGeneratorShape {
   readonly next: Effect.Effect<string>
 }
 
-export class IdGenerator extends Context.Service<IdGenerator, IdGeneratorShape>()("@reader/IdGenerator") {}
+export class IdGenerator extends Context.Service<IdGenerator, IdGeneratorShape>()("@radar/IdGenerator") {}

@@ -19,7 +19,7 @@ export interface EntryServiceShape {
   readonly stats: Effect.Effect<EntryStats>
 }
 
-export class EntryService extends Context.Service<EntryService, EntryServiceShape>()("@reader/EntryService") {}
+export class EntryService extends Context.Service<EntryService, EntryServiceShape>()("@radar/EntryService") {}
 
 export const MAX_PAGE_SIZE = 200
 

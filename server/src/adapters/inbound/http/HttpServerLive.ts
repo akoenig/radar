@@ -4,7 +4,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { NodeHttpServer } from "@effect/platform-node"
 import { createServer } from "node:http"
 import { McpHttpLive, type McpAccess } from "../mcp/McpHttp.js"
-import { ReaderApi } from "./Api.js"
+import { RadarApi } from "./Api.js"
 import { CategoriesHandlersLive } from "./CategoriesHandlers.js"
 import { EntriesHandlersLive } from "./EntriesHandlers.js"
 import { FeedsHandlersLive } from "./FeedsHandlers.js"
@@ -19,7 +19,7 @@ export interface HttpServerOptions {
   readonly mcpAccess: McpAccess
 }
 
-const ApiLive = HttpApiBuilder.layer(ReaderApi, { openapiPath: "/api/openapi.json" }).pipe(
+const ApiLive = HttpApiBuilder.layer(RadarApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide([FeedsHandlersLive, CategoriesHandlersLive, EntriesHandlersLive, SystemHandlersLive]),
 )
 

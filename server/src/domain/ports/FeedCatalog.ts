@@ -9,4 +9,4 @@ export interface FeedCatalogShape {
   readonly topics: Effect.Effect<ReadonlyArray<CatalogTopic>>
 }
 
-export class FeedCatalog extends Context.Service<FeedCatalog, FeedCatalogShape>()("@reader/FeedCatalog") {}
+export class FeedCatalog extends Context.Service<FeedCatalog, FeedCatalogShape>()("@radar/FeedCatalog") {}

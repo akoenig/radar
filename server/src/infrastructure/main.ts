@@ -5,6 +5,7 @@ import { ProxyAwareHttpClientLive } from "../adapters/outbound/feed/ProxyAwareHt
 import { makeAppLayer } from "./AppLayer.js"
 import { MCP_PATH } from "../adapters/inbound/mcp/McpHttp.js"
 import { loadConfig, resolveMcpToken } from "./Config.js"
+import { adoptLegacyDatabase } from "./LegacyDatabase.js"
 import { isPublic, publicPaths, readManifest } from "./Manifest.js"
 
 /**
@@ -26,6 +27,7 @@ const soundAuthMode = (requested: "router" | "token") =>
 
 const program = Effect.gen(function* () {
   const config = yield* loadConfig
+  yield* adoptLegacyDatabase(config.databasePath)
   const mcpAuth = yield* soundAuthMode(config.mcpAuth)
   // In router mode the platform authenticates callers, so there is no token to
   // look up and no reason to call the secrets service on every start.
@@ -35,7 +37,7 @@ const program = Effect.gen(function* () {
       : yield* resolveMcpToken(config.mcpToken).pipe(
           Effect.provide(BottleSecretsLive.pipe(Layer.provide(ProxyAwareHttpClientLive))),
         )
-  yield* Effect.annotateLogs(Effect.logInfo("starting reader"), {
+  yield* Effect.annotateLogs(Effect.logInfo("starting radar"), {
     port: config.port,
     database: config.databasePath,
     staticDir: config.staticDir,

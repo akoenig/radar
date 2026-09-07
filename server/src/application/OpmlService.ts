@@ -23,7 +23,7 @@ export interface OpmlServiceShape {
   readonly importOpml: (xml: string) => Effect.Effect<ImportSummary, InvalidOpml>
 }
 
-export class OpmlService extends Context.Service<OpmlService, OpmlServiceShape>()("@reader/OpmlService") {}
+export class OpmlService extends Context.Service<OpmlService, OpmlServiceShape>()("@radar/OpmlService") {}
 
 export const OpmlServiceLive = Layer.effect(
   OpmlService,

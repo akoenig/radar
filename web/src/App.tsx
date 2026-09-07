@@ -226,7 +226,7 @@ export const App = () => {
   const title = viewTitle(state.view, feedList, categories.data ?? [])
   useEffect(() => {
     const unread = feedList.reduce((n, f) => n + f.unread, 0)
-    document.title = `${unread > 0 ? `(${unread}) ` : ""}${title} · Reader`
+    document.title = `${unread > 0 ? `(${unread}) ` : ""}${title} · Radar`
   }, [title, feedList])
 
   const loadMore = useCallback(() => {

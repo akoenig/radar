@@ -6,7 +6,7 @@ import { isPublic, publicPaths, readManifest } from "../src/infrastructure/Manif
 describe("public_paths", () => {
   it("reads the array out of the routing section", () => {
     expect(
-      publicPaths(`[app]\nname = "reader"\n\n[routing]\nhealth_check = "/api/health"\npublic_paths = ["/mcp", "/rss"]\n`),
+      publicPaths(`[app]\nname = "radar"\n\n[routing]\nhealth_check = "/api/health"\npublic_paths = ["/mcp", "/rss"]\n`),
     ).toEqual(["/mcp", "/rss"])
   })
 

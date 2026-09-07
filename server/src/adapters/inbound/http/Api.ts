@@ -242,4 +242,4 @@ export const SystemGroup = HttpApiGroup.make("system").add(
   HttpApiEndpoint.post("importOpml", "/opml", { payload: PlainText, success: ImportSummaryDto, error: BadRequest }),
 )
 
-export const ReaderApi = HttpApi.make("reader").add(FeedsGroup, CategoriesGroup, EntriesGroup, SystemGroup).prefix("/api")
+export const RadarApi = HttpApi.make("radar").add(FeedsGroup, CategoriesGroup, EntriesGroup, SystemGroup).prefix("/api")

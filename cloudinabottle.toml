@@ -1,5 +1,5 @@
 [app]
-name = "reader"
+name = "radar"
 version = "0.1.0"
 description = "A keyboard-first feed reader in the spirit of Google Reader"
 

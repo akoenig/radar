@@ -28,7 +28,7 @@ export interface FeedIngestorShape {
   ) => Effect.Effect<IngestResult>
 }
 
-export class FeedIngestor extends Context.Service<FeedIngestor, FeedIngestorShape>()("@reader/FeedIngestor") {}
+export class FeedIngestor extends Context.Service<FeedIngestor, FeedIngestorShape>()("@radar/FeedIngestor") {}
 
 const toEntry = (feed: Feed, item: ParsedItem, id: string, now: number): Entry =>
   new Entry({

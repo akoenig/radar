@@ -2,13 +2,13 @@ import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { EntryService } from "../../../application/EntryService.js"
 import { CategoryId, EntryId, FeedId } from "../../../domain/model/Ids.js"
-import { ReaderApi } from "./Api.js"
+import { RadarApi } from "./Api.js"
 import { BadRequest, mapDomainErrors } from "./ApiErrors.js"
 import { decodeCursor, encodeCursor, entryToDto, entryToSummaryDto } from "./mappers.js"
 
 const DEFAULT_PAGE = 60
 
-export const EntriesHandlersLive = HttpApiBuilder.group(ReaderApi, "entries", (handlers) =>
+export const EntriesHandlersLive = HttpApiBuilder.group(RadarApi, "entries", (handlers) =>
   Effect.gen(function* () {
     const entries = yield* EntryService
 

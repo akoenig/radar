@@ -23,4 +23,4 @@ export interface OpmlCodecShape {
   readonly render: (doc: OpmlDocument) => Effect.Effect<string>
 }
 
-export class OpmlCodec extends Context.Service<OpmlCodec, OpmlCodecShape>()("@reader/OpmlCodec") {}
+export class OpmlCodec extends Context.Service<OpmlCodec, OpmlCodecShape>()("@radar/OpmlCodec") {}

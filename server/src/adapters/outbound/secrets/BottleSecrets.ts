@@ -14,7 +14,7 @@ export interface SecretsShape {
   readonly get: (key: string) => Effect.Effect<Option.Option<Redacted.Redacted<string>>>
 }
 
-export class Secrets extends Context.Service<Secrets, SecretsShape>()("@reader/Secrets") {}
+export class Secrets extends Context.Service<Secrets, SecretsShape>()("@radar/Secrets") {}
 
 const ROUTER_URL = "BOTTLE_ROUTER_URL"
 const APP_TOKEN = "BOTTLE_APP_TOKEN"
@@ -71,7 +71,7 @@ export const BottleSecretsLive = Layer.effect(
               : Effect.map(response.json, (body) => extractSecret(body, key)),
           ),
           Effect.map((value) => (value === null ? Option.none() : Option.some(Redacted.make(value)))),
-          // A missing secret must never stop the reader from starting.
+          // A missing secret must never stop Radar from starting.
           Effect.catchCause((cause) =>
             Effect.as(Effect.logWarning(`Could not read secret ${key}`, cause), Option.none()),
           ),

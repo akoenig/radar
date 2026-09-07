@@ -12,7 +12,7 @@ import type { Feed } from "../../../domain/model/Feed.js"
 import { CategoryId, EntryId, FeedId } from "../../../domain/model/Ids.js"
 import { htmlToText } from "../../../shared/html.js"
 
-export const MCP_SERVER_NAME = "reader"
+export const MCP_SERVER_NAME = "radar"
 export const MCP_SERVER_VERSION = "0.1.0"
 
 /** Entries returned per page when the caller does not say. */
@@ -43,7 +43,7 @@ const describe = (error: { readonly _tag: string; readonly [key: string]: unknow
     case "FeedUnreachable":
       return `Could not reach ${String(error.url)}: ${String(error.reason)}`
     case "FeedNotParseable":
-      return `${String(error.url)} is not a feed this reader understands: ${String(error.reason)}`
+      return `${String(error.url)} is not a feed Radar understands: ${String(error.reason)}`
     case "NoFeedDiscovered":
       return `No feed advertised at ${String(error.url)}.`
     default:
@@ -87,13 +87,13 @@ const entrySummary = (entry: Entry, feedTitle: string | undefined) => ({
 })
 
 /**
- * The reader as MCP tools.
+ * Radar as MCP tools.
  *
  * A driving adapter like the HTTP API: it holds no state and owns no rules, it
  * only translates tool calls into application calls. Tool descriptions are part
  * of the interface — they are what an agent reads to decide what to call.
  */
-export const makeReaderMcpServer = Effect.gen(function* () {
+export const makeRadarMcpServer = Effect.gen(function* () {
   const subscriptions = yield* SubscriptionService
   const entries = yield* EntryService
   const categories = yield* CategoryService
@@ -258,7 +258,7 @@ export const makeReaderMcpServer = Effect.gen(function* () {
     "set_saved",
     {
       title: "Save an entry for later",
-      description: "Add or remove an entry from the reader's Read later list.",
+      description: "Add or remove an entry from the Read later list.",
       inputSchema: {
         id: z.string().describe("Entry id from list_entries."),
         saved: z.boolean().describe("true saves, false removes."),
@@ -380,7 +380,7 @@ export const makeReaderMcpServer = Effect.gen(function* () {
     {
       title: "Fetch new entries",
       description:
-        "Fetch every subscription now, or just one. The reader also refreshes on its own schedule, so this is " +
+        "Fetch every subscription now, or just one. Radar also refreshes on its own schedule, so this is " +
         "only needed when the caller wants the very latest before reading.",
       inputSchema: { feedId: z.string().optional().describe("Refresh only this feed.") },
       annotations: { idempotentHint: true },

@@ -133,7 +133,7 @@ export const Sidebar = () => {
   return (
     <aside className={`sidebar${state.sidebarOpen ? " open" : ""}`} aria-label="Subscriptions">
       <div className="brand">
-        <span className="brand-mark">Reader</span>
+        <span className="brand-mark">Radar</span>
         {stats.data && stats.data.unread > 0 && <span className="brand-count">{stats.data.unread}</span>}
       </div>
 
@@ -188,7 +188,7 @@ export const Sidebar = () => {
         <button type="button" className="install-banner" onClick={() => void pwa.install()}>
           <DownloadIcon size={15} />
           <span>
-            <strong>Install Reader</strong>
+            <strong>Install Radar</strong>
             <small>Open it like a native app, and read offline.</small>
           </span>
         </button>

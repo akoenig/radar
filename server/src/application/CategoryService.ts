@@ -22,7 +22,7 @@ export interface CategoryServiceShape {
   readonly remove: (id: CategoryId) => Effect.Effect<void, CategoryNotFound>
 }
 
-export class CategoryService extends Context.Service<CategoryService, CategoryServiceShape>()("@reader/CategoryService") {}
+export class CategoryService extends Context.Service<CategoryService, CategoryServiceShape>()("@radar/CategoryService") {}
 
 export const CategoryServiceLive = Layer.effect(
   CategoryService,

@@ -15,4 +15,4 @@ export interface FeedSourceShape {
   readonly discover: (url: string) => Effect.Effect<ReadonlyArray<DiscoveredFeed>, InvalidFeedUrl | FeedUnreachable>
 }
 
-export class FeedSource extends Context.Service<FeedSource, FeedSourceShape>()("@reader/FeedSource") {}
+export class FeedSource extends Context.Service<FeedSource, FeedSourceShape>()("@radar/FeedSource") {}
