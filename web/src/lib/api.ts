@@ -83,6 +83,12 @@ export const api = {
       request<Feed>("POST", "/api/feeds", { json: input }),
     update: (id: string, patch: { title?: string; url?: string; categoryId?: string | null; position?: number }) =>
       request<Feed>("PATCH", `/api/feeds/${encodeURIComponent(id)}`, { json: patch }),
+    /**
+     * Commits a whole sidebar arrangement at once and answers with the full
+     * list in its new order. One request per drop, not one per moved row.
+     */
+    reorder: (items: ReadonlyArray<{ id: string; categoryId: string | null; position: number }>) =>
+      request<ReadonlyArray<Feed>>("POST", "/api/feeds/order", { json: { items } }),
     remove: (id: string) => request<void>("DELETE", `/api/feeds/${encodeURIComponent(id)}`),
     refresh: (id: string) => request<RefreshResult>("POST", `/api/feeds/${encodeURIComponent(id)}/refresh`),
   },
@@ -91,6 +97,8 @@ export const api = {
     create: (name: string) => request<Category>("POST", "/api/categories", { json: { name } }),
     update: (id: string, patch: { name?: string; position?: number }) =>
       request<Category>("PATCH", `/api/categories/${encodeURIComponent(id)}`, { json: patch }),
+    reorder: (items: ReadonlyArray<{ id: string; position: number }>) =>
+      request<ReadonlyArray<Category>>("POST", "/api/categories/order", { json: { items } }),
     remove: (id: string) => request<void>("DELETE", `/api/categories/${encodeURIComponent(id)}`),
   },
   entries: {

@@ -15,6 +15,11 @@ export const CategoriesHandlersLive = HttpApiBuilder.group(RadarApi, "categories
       .handle("update", ({ params, payload }) =>
         mapDomainErrors(categories.update(CategoryId.make(params.id), payload)).pipe(Effect.map(categoryToDto)),
       )
+      .handle("reorder", ({ payload }) =>
+        mapDomainErrors(
+          categories.reorder(payload.items.map((item) => ({ id: CategoryId.make(item.id), position: item.position }))),
+        ).pipe(Effect.flatMap(() => Effect.map(categories.list, (all) => all.map(categoryToDto)))),
+      )
       .handle("remove", ({ params }) => mapDomainErrors(categories.remove(CategoryId.make(params.id))))
   }),
 )

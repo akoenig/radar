@@ -18,6 +18,10 @@ export interface CategoryServiceShape {
   /** Idempotent create-by-name used by imports. */
   readonly ensure: (name: string) => Effect.Effect<Category>
   readonly update: (id: CategoryId, patch: CategoryPatch) => Effect.Effect<Category, CategoryNotFound>
+  /** Commit a whole folder arrangement in one transaction. */
+  readonly reorder: (
+    order: ReadonlyArray<{ readonly id: CategoryId; readonly position: number }>,
+  ) => Effect.Effect<ReadonlyArray<Category>, CategoryNotFound>
   /** Deleting a category leaves its feeds uncategorized. */
   readonly remove: (id: CategoryId) => Effect.Effect<void, CategoryNotFound>
 }
@@ -67,6 +71,16 @@ export const CategoryServiceLive = Layer.effect(
         return category
       })
 
+    const reorder: CategoryServiceShape["reorder"] = (order) =>
+      Effect.gen(function* () {
+        if (order.length === 0) return []
+        // Resolve every id first so an unknown one fails before any write.
+        const moved: Array<Category> = []
+        for (const { id, position } of order) moved.push((yield* requireCategory(id)).moveTo(position))
+        yield* uow.transaction(Effect.forEach(moved, categories.save, { discard: true }))
+        return moved
+      })
+
     const remove: CategoryServiceShape["remove"] = (id) =>
       Effect.gen(function* () {
         yield* requireCategory(id)
@@ -80,6 +94,6 @@ export const CategoryServiceLive = Layer.effect(
         )
       })
 
-    return { list: categories.findAll, create, ensure, update, remove }
+    return { list: categories.findAll, create, ensure, update, reorder, remove }
   }),
 )

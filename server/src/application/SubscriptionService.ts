@@ -16,6 +16,7 @@ import { EntryRepository } from "../domain/ports/EntryRepository.js"
 import { FeedRepository } from "../domain/ports/FeedRepository.js"
 import { FeedSource } from "../domain/ports/FeedSource.js"
 import { IdGenerator } from "../domain/ports/IdGenerator.js"
+import { UnitOfWork } from "../domain/ports/UnitOfWork.js"
 import { FeedIngestor } from "./FeedIngestor.js"
 
 export interface SubscribeInput {
@@ -29,6 +30,13 @@ export interface FeedPatch {
   readonly url?: string | undefined
   readonly categoryId?: CategoryId | null | undefined
   readonly position?: number | undefined
+}
+
+/** One row of a sidebar reorder: where the feed lands, and in which folder. */
+export interface FeedPlacement {
+  readonly id: FeedId
+  readonly categoryId: CategoryId | null
+  readonly position: number
 }
 
 export interface FeedWithCounts {
@@ -49,6 +57,15 @@ export interface SubscriptionServiceShape {
   readonly get: (id: FeedId) => Effect.Effect<FeedWithCounts, FeedNotFound>
   readonly subscribe: (input: SubscribeInput) => Effect.Effect<Feed, SubscribeError>
   readonly update: (id: FeedId, patch: FeedPatch) => Effect.Effect<Feed, FeedNotFound | CategoryNotFound | FeedAlreadyExists>
+  /**
+   * Apply a whole sidebar arrangement at once. Reordering by patching feeds
+   * one at a time would leave the list briefly inconsistent and cost a
+   * request per row, so the drag-and-drop path commits every placement in a
+   * single transaction.
+   */
+  readonly reorder: (
+    placements: ReadonlyArray<FeedPlacement>,
+  ) => Effect.Effect<ReadonlyArray<Feed>, FeedNotFound | CategoryNotFound>
   readonly unsubscribe: (id: FeedId) => Effect.Effect<void, FeedNotFound>
   readonly discover: (url: string) => Effect.Effect<ReadonlyArray<DiscoveredFeed>, InvalidFeedUrl | FeedUnreachable>
 }
@@ -66,6 +83,7 @@ export const SubscriptionServiceLive = Layer.effect(
     const source = yield* FeedSource
     const ids = yield* IdGenerator
     const ingestor = yield* FeedIngestor
+    const uow = yield* UnitOfWork
 
     const requireFeed = (id: FeedId) =>
       Effect.flatMap(feeds.findById(id), Option.match({ onNone: () => new FeedNotFound({ id }), onSome: Effect.succeed }))
@@ -172,6 +190,23 @@ export const SubscriptionServiceLive = Layer.effect(
       return updated
     })
 
+    const reorder: SubscriptionServiceShape["reorder"] = Effect.fn("SubscriptionService.reorder")(function* (
+      placements,
+    ) {
+      if (placements.length === 0) return []
+      const now = yield* Clock.currentTimeMillis
+      // Validate everything before writing anything: a half-applied
+      // arrangement is worse than a rejected one.
+      const moved: Array<Feed> = []
+      for (const placement of placements) {
+        const feed = yield* requireFeed(placement.id)
+        yield* requireCategory(placement.categoryId)
+        moved.push(feed.edited({ categoryId: placement.categoryId, position: placement.position }, now))
+      }
+      yield* uow.transaction(feeds.saveAll(moved))
+      return moved
+    })
+
     const unsubscribe: SubscriptionServiceShape["unsubscribe"] = Effect.fn("SubscriptionService.unsubscribe")(
       function* (id) {
         yield* requireFeed(id)
@@ -180,7 +215,7 @@ export const SubscriptionServiceLive = Layer.effect(
       },
     )
 
-    return { list, get, subscribe, update, unsubscribe, discover: source.discover }
+    return { list, get, subscribe, update, reorder, unsubscribe, discover: source.discover }
   }),
 )
 
