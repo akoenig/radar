@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/public/icon.svg" width="88" alt="">
+  <img src="docs/logo.png" width="112" alt="Radar logo">
 </p>
 
 <h1 align="center">Radar</h1>
@@ -29,7 +29,7 @@
 <br>
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="Radar in split view: subscriptions on the left, entries in the middle, an article open on the right." width="100%">
+  <img src="docs/screenshot.png" alt="Radar in split view: subscriptions on the left, entries with summaries in the middle, an article open on the right." width="100%">
 </p>
 
 <br>
