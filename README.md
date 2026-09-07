@@ -70,7 +70,7 @@ Configuration (environment variables):
 | `DATABASE_PATH` | `$DATA_DIR/reader.db` | SQLite file |
 | `STATIC_DIR` | `../web/dist` | Built client to serve |
 | `REFRESH_INTERVAL_MINUTES` | `15` | Background refresh cadence |
-| `MCP_TOKEN` | — | Bearer token for `/mcp`. Unset means the endpoint does not exist. |
+| `MCP_TOKEN` | — | Bearer token for `/mcp`, for local runs. On a deployed instance the granted `READER_MCP_TOKEN` secret wins. Neither set means MCP is off. |
 
 ## Deploy to Cloud in a Bottle
 
@@ -109,12 +109,32 @@ Tools: `list_feeds`, `list_entries`, `get_entry`, `get_stats`, `list_categories`
 `browse_catalog`, `refresh`. `get_entry` returns article text with markup stripped, which
 is what an agent actually wants to read.
 
+Locally:
+
 ```sh
 MCP_TOKEN=$(openssl rand -hex 32) pnpm start
 ```
 
-Then point a client at `https://<your-instance>/mcp` with
-`Authorization: Bearer $MCP_TOKEN`.
+On a Cloud in a Bottle instance the token comes from the secrets service instead.
+`cloudinabottle.toml` asks the owner to grant `READER_MCP_TOKEN`:
+
+```toml
+[[services.v2.consumes]]
+service = "github.com/imbue-openhost/openhost/services/secrets"
+shortname = "secrets"
+version = ">=0.1.0"
+grants = [{key = "READER_MCP_TOKEN"}]
+```
+
+A grant only says the app *may* read that key — nothing is injected into the
+environment — so the server fetches it at startup through
+`$BOTTLE_ROUTER_URL/api/services/v2/call/secrets/get` using `$BOTTLE_APP_TOKEN`, and
+uses it as the MCP token. Put the value in the secrets app under that name and restart.
+The granted secret wins over `MCP_TOKEN`; the env var remains for local runs, where there
+is no secrets service.
+
+Then point a client at `https://<your-instance>/mcp` with the token as
+`Authorization: Bearer <token>`.
 
 **Security.** The endpoint is served only when `MCP_TOKEN` is set — with no token there is
 nothing to authenticate with, so the route is not registered at all rather than served

@@ -1,4 +1,5 @@
-import { Config, Context, Duration, Effect, Layer, Redacted } from "effect"
+import { Config, Context, Duration, Effect, Layer, Option, Redacted } from "effect"
+import { Secrets } from "../adapters/outbound/secrets/BottleSecrets.js"
 import { fileURLToPath } from "node:url"
 import { resolve } from "node:path"
 
@@ -8,7 +9,10 @@ export interface AppConfigShape {
   readonly databasePath: string
   readonly staticDir: string
   readonly refreshInterval: Duration.Duration
-  /** When absent, the MCP endpoint is not served at all. */
+  /**
+   * When absent, the MCP endpoint is not served at all. Resolved from the
+   * secrets service first and MCP_TOKEN second — see resolveMcpToken.
+   */
   readonly mcpToken: Redacted.Redacted<string> | null
 }
 
@@ -42,3 +46,29 @@ export const loadConfig: Effect.Effect<AppConfigShape, Config.ConfigError> = Eff
 })
 
 export const AppConfigLive = Layer.effect(AppConfig, loadConfig)
+
+/** The key the owner grants in cloudinabottle.toml. */
+export const MCP_TOKEN_SECRET = "READER_MCP_TOKEN"
+
+/**
+ * Settles where the MCP token comes from.
+ *
+ * On a deployed instance it is the granted secret; the manifest names the key
+ * and nothing injects it, so the mapping onto this setting happens here. Local
+ * runs have no secrets service, so MCP_TOKEN stays the way to switch MCP on by
+ * hand.
+ */
+export const resolveMcpToken = (fromEnv: Redacted.Redacted<string> | null) =>
+  Effect.gen(function* () {
+    const secrets = yield* Secrets
+    const granted = yield* secrets.get(MCP_TOKEN_SECRET)
+    if (Option.isSome(granted)) {
+      yield* Effect.logInfo(`MCP token read from the secrets service (${MCP_TOKEN_SECRET})`)
+      return granted.value
+    }
+    if (fromEnv !== null) {
+      yield* Effect.logInfo("MCP token read from MCP_TOKEN")
+      return fromEnv
+    }
+    return null
+  })
