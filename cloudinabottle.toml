@@ -27,10 +27,16 @@ app_data = true
 
 [routing]
 health_check = "/api/health"
-# No public paths: the router's owner login is the only authentication layer.
+public_paths = ["/mcp"]
+# No public paths on purpose. The reader, including /mcp, stays behind the
+# platform's authentication — which an MCP client satisfies with a token from
+# `bottle tokens create`, so nothing here needs to be opened up. MCP_AUTH=router
+# in the Dockerfile depends on this; the server checks it at startup and refuses
+# that mode if /mcp is ever listed below.
 
 [[services.v2.consumes]]
 service = "github.com/imbue-openhost/openhost/services/secrets"
 shortname = "secrets"
 version = ">=0.1.0"
 grants = [{key = "READER_MCP_TOKEN"}]
+public_paths = ["/mcp"]

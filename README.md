@@ -70,7 +70,8 @@ Configuration (environment variables):
 | `DATABASE_PATH` | `$DATA_DIR/reader.db` | SQLite file |
 | `STATIC_DIR` | `../web/dist` | Built client to serve |
 | `REFRESH_INTERVAL_MINUTES` | `15` | Background refresh cadence |
-| `MCP_TOKEN` | — | Bearer token for `/mcp`, for local runs. On a deployed instance the granted `READER_MCP_TOKEN` secret wins. Neither set means MCP is off. |
+| `MCP_AUTH` | `token` | `router` trusts Cloud in a Bottle to authenticate callers of `/mcp`; `token` makes the app the only gate. The image ships `router`. |
+| `MCP_TOKEN` | — | Bearer token for `/mcp` in `token` mode, for local runs. On a deployed instance the granted `READER_MCP_TOKEN` secret wins. Neither set means MCP is off. |
 
 ## Deploy to Cloud in a Bottle
 
@@ -109,14 +110,44 @@ Tools: `list_feeds`, `list_entries`, `get_entry`, `get_stats`, `list_categories`
 `browse_catalog`, `refresh`. `get_entry` returns article text with markup stripped, which
 is what an agent actually wants to read.
 
-Locally:
+### Connecting
+
+Who authenticates the caller is set by `MCP_AUTH`, and the answer differs on and off a
+Cloud in a Bottle instance.
+
+**On an instance: let the platform do it (`MCP_AUTH=router`, what the image ships).**
+Every route of a non-public app already requires the owner, and that means an API token
+as much as a browser session — so an MCP client can authenticate without a login:
 
 ```sh
-MCP_TOKEN=$(openssl rand -hex 32) pnpm start
+bottle tokens create --name reader-mcp --expiry-hours 720
 ```
 
-On a Cloud in a Bottle instance the token comes from the secrets service instead.
-`cloudinabottle.toml` asks the owner to grant `READER_MCP_TOKEN`:
+Point a client at `https://<your-instance>/mcp` with that token as
+`Authorization: Bearer <token>`. `/mcp` stays out of `public_paths`, so it is never
+exposed to the internet, and there is no second secret to manage.
+
+In this mode the reader does not check a token of its own. It cannot: there is one
+`Authorization` header, and by the time the request arrives it carries the router's
+token, not ours — a second check could only reject a caller the owner already approved.
+Which is why the mode holds *only* while `/mcp` is behind the login. So the server reads
+`cloudinabottle.toml` at startup, and if `public_paths` covers `/mcp` it refuses router
+mode and falls back to its own token rather than serving the reader open.
+
+The manifest cannot set environment variables, so `MCP_AUTH` is set in the `Dockerfile` —
+that is where a deployed app's configuration lives.
+
+**Locally, or behind a public path: the app's own token (`MCP_AUTH=token`).**
+
+```sh
+MCP_AUTH=token MCP_TOKEN=$(openssl rand -hex 32) pnpm start
+```
+
+The endpoint is served only when a token is configured — with none there is nothing to
+authenticate with, so the route answers 404 rather than serving the reader open. Tokens
+are compared in constant time. On a deployed instance the token comes from the secrets
+service rather than the environment: `cloudinabottle.toml` asks the owner to grant
+`READER_MCP_TOKEN`:
 
 ```toml
 [[services.v2.consumes]]
@@ -128,30 +159,22 @@ grants = [{key = "READER_MCP_TOKEN"}]
 
 A grant only says the app *may* read that key — nothing is injected into the
 environment — so the server fetches it at startup through
-`$BOTTLE_ROUTER_URL/api/services/v2/call/secrets/get` using `$BOTTLE_APP_TOKEN`, and
-uses it as the MCP token. Put the value in the secrets app under that name and restart.
-The granted secret wins over `MCP_TOKEN`; the env var remains for local runs, where there
-is no secrets service.
+`$BOTTLE_ROUTER_URL/api/services/v2/call/secrets/get` using `$BOTTLE_APP_TOKEN`, and uses
+it as the MCP token. Put the value in the secrets app under that name and restart. The
+granted secret wins over `MCP_TOKEN`; the env var remains for local runs, where there is
+no secrets service.
 
-Then point a client at `https://<your-instance>/mcp` with the token as
-`Authorization: Bearer <token>`.
-
-**Security.** The endpoint is served only when `MCP_TOKEN` is set — with no token there is
-nothing to authenticate with, so the route is not registered at all rather than served
-open. Tokens are compared in constant time.
-
-Cloud in a Bottle keeps non-public paths behind the owner login, which an MCP client
-cannot carry, so reaching `/mcp` from outside the instance means adding it to
-`public_paths` in `cloudinabottle.toml`:
+This is the mode to use if you ever open the endpoint to the internet:
 
 ```toml
 [routing]
 health_check = "/api/health"
-public_paths = ["/mcp"]   # only with MCP_TOKEN set — this bypasses the owner login
+public_paths = ["/mcp"]   # only with MCP_AUTH=token and a token set
 ```
 
-That is deliberately not enabled by default: it moves `/mcp` out from behind the router's
-authentication, leaving `MCP_TOKEN` as the only thing in front of your reader.
+That is deliberately not enabled: it moves `/mcp` out from behind the router's
+authentication, leaving one token as the only thing in front of your reader. Router mode
+needs no such hole in the first place.
 
 ## Notes
 

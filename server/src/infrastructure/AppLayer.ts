@@ -1,6 +1,7 @@
 import { Duration, Layer } from "effect"
 import { ApplicationLive } from "../application/index.js"
 import { HttpServerLive } from "../adapters/inbound/http/HttpServerLive.js"
+import { mcpAccess } from "../adapters/inbound/mcp/McpHttp.js"
 import { RefreshSchedulerLive } from "../adapters/inbound/scheduler/RefreshScheduler.js"
 import { StaticFeedCatalogLive } from "../adapters/outbound/catalog/StaticFeedCatalog.js"
 import { HttpFeedSourceLive } from "../adapters/outbound/feed/HttpFeedSource.js"
@@ -26,7 +27,12 @@ export const makeAppLayer = (config: AppConfigShape) => {
   const Application = ApplicationLive.pipe(Layer.provide(DrivenAdapters))
 
   const DrivingAdapters = Layer.mergeAll(
-    HttpServerLive({ host: config.host, port: config.port, staticDir: config.staticDir, mcpToken: config.mcpToken }),
+    HttpServerLive({
+      host: config.host,
+      port: config.port,
+      staticDir: config.staticDir,
+      mcpAccess: mcpAccess(config.mcpAuth, config.mcpToken),
+    }),
     RefreshSchedulerLive({ interval: config.refreshInterval, initialDelay: Duration.seconds(5) }),
   )
 

@@ -14,6 +14,12 @@ export interface AppConfigShape {
    * secrets service first and MCP_TOKEN second — see resolveMcpToken.
    */
   readonly mcpToken: Redacted.Redacted<string> | null
+  /**
+   * Who authenticates callers of /mcp. "router" leaves it to Cloud in a Bottle,
+   * which is what lets a client use a `bottle tokens` token instead of a
+   * browser login; "token" makes this app the only gate.
+   */
+  readonly mcpAuth: "router" | "token"
 }
 
 export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("@reader/AppConfig") {}
@@ -35,6 +41,7 @@ export const loadConfig: Effect.Effect<AppConfigShape, Config.ConfigError> = Eff
   const staticDir = yield* Config.string("STATIC_DIR").pipe(Config.withDefault(defaultStaticDir))
   const refreshMinutes = yield* Config.number("REFRESH_INTERVAL_MINUTES").pipe(Config.withDefault(15))
   const mcpSecret = yield* Config.string("MCP_TOKEN").pipe(Config.withDefault(""))
+  const mcpAuth = yield* Config.string("MCP_AUTH").pipe(Config.withDefault(""))
   return {
     host,
     port,
@@ -42,8 +49,16 @@ export const loadConfig: Effect.Effect<AppConfigShape, Config.ConfigError> = Eff
     staticDir,
     refreshInterval: Duration.minutes(Math.max(1, refreshMinutes)),
     mcpToken: mcpSecret.trim().length > 0 ? Redacted.make(mcpSecret.trim()) : null,
+    mcpAuth: parseMcpAuth(mcpAuth),
   }
 })
+
+/**
+ * Reads MCP_AUTH. Anything but the one opt-in word leaves the app guarding
+ * itself, so a typo cannot quietly drop the check.
+ */
+export const parseMcpAuth = (raw: string): "router" | "token" =>
+  raw.trim().toLowerCase() === "router" ? "router" : "token"
 
 export const AppConfigLive = Layer.effect(AppConfig, loadConfig)
 

@@ -45,6 +45,9 @@ RUN --mount=type=cache,target=${PNPM_STORE} \
 
 COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/web/dist web/dist
+# Read at startup to check that /mcp is not in public_paths before trusting the
+# platform to authenticate its callers.
+COPY cloudinabottle.toml ./
 
 # Cloud in a Bottle mounts BOTTLE_APP_DATA_DIR and the server prefers it. This
 # is the fallback for a plain `docker run`, and it must be writable by the
@@ -52,6 +55,13 @@ COPY --from=build /app/web/dist web/dist
 RUN mkdir -p /app/data && chown -R node:node /app/data
 VOLUME ["/app/data"]
 
+# Cloud in a Bottle's manifest cannot set environment variables, so this image
+# is where the deployed configuration lives. Router mode: the platform already
+# authenticates every request to a non-public path, so an MCP client can use a
+# `bottle tokens create` token instead of a browser session, and no secret is
+# needed. Set MCP_AUTH=token (and grant READER_MCP_TOKEN) to guard /mcp here
+# instead — required if you ever add it to public_paths.
+ENV MCP_AUTH=router
 ENV PORT=8080 HOST=0.0.0.0
 EXPOSE 8080
 USER node

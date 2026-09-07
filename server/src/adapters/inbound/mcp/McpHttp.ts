@@ -5,6 +5,30 @@ import { makeReaderMcpServer } from "./ReaderMcpServer.js"
 
 export const MCP_PATH = "/mcp"
 
+/**
+ * How a caller at /mcp is authenticated.
+ *
+ * "router": Cloud in a Bottle has already done it. Every route of a non-public
+ * app requires the owner's session or an API token (`bottle tokens create`),
+ * and the router enforces that before the request reaches us — so checking a
+ * second token here would only fight over the one Authorization header, which
+ * by then carries the router's token and not ours.
+ *
+ * "token": we are the only gate, for when /mcp has been listed in
+ * `public_paths` and the router waves everything through.
+ */
+export type McpAccess =
+  | { readonly _tag: "Disabled" }
+  | { readonly _tag: "Router" }
+  | { readonly _tag: "Token"; readonly token: Redacted.Redacted<string> }
+
+/**
+ * Picks the mode from configuration. "router" needs no token of our own — the
+ * platform is the gate — so it stays on whether or not a secret was granted.
+ */
+export const mcpAccess = (mode: "router" | "token", token: Redacted.Redacted<string> | null): McpAccess =>
+  mode === "router" ? { _tag: "Router" } : token === null ? { _tag: "Disabled" } : { _tag: "Token", token }
+
 const disabled = HttpServerResponse.jsonUnsafe(
   {
     error: "mcp_disabled",
@@ -39,12 +63,9 @@ const bearer = (header: string | undefined): string | null => {
  * single call with no subscriptions to keep alive. That means no session table
  * to leak and no cross-request state to get wrong.
  *
- * MCP is served only when a token is configured. Cloud in a Bottle keeps
- * non-public paths behind the owner login, but an MCP client cannot carry that
- * session, so reaching this route from outside means listing it in
- * `public_paths` — at which point this token is the only thing in front of the
- * reader. Absent a token there is nothing to authenticate with, so no tools are
- * served.
+ * Who authenticates the caller depends on the mode — see McpAccess. In the
+ * default "token" mode there must be a token, because without one there is
+ * nothing to authenticate with and no tools are served.
  *
  * The route is registered either way. Leaving it unregistered when disabled
  * does not make the path unreachable, it makes it *someone else's*: the static
@@ -53,15 +74,18 @@ const bearer = (header: string | undefined): string | null => {
  * #/all. An API path answering with the app is worse than a plain refusal, so
  * this owns the path and says why it is closed.
  */
-export const McpHttpLive = (token: Redacted.Redacted<string> | null) =>
+export const McpHttpLive = (access: McpAccess) =>
   HttpRouter.add(
     "*",
     MCP_PATH,
     Effect.gen(function* () {
-      if (token === null) return disabled
+      if (access._tag === "Disabled") return disabled
 
       const request = yield* HttpServerRequest.HttpServerRequest
-      if (!tokenMatches(bearer(request.headers["authorization"]) ?? "", Redacted.value(token))) {
+      if (
+        access._tag === "Token" &&
+        !tokenMatches(bearer(request.headers["authorization"]) ?? "", Redacted.value(access.token))
+      ) {
         return unauthorized
       }
 
@@ -95,12 +119,18 @@ export const McpHttpLive = (token: Redacted.Redacted<string> | null) =>
         ),
       ),
     ),
-  ).pipe(
-    Layer.provideMerge(
-      Layer.effectDiscard(
-        token === null
-          ? Effect.logInfo(`MCP disabled at ${MCP_PATH}: set MCP_TOKEN to enable it`)
-          : Effect.logInfo(`MCP endpoint listening on ${MCP_PATH}`),
-      ),
-    ),
-  )
+  ).pipe(Layer.provideMerge(Layer.effectDiscard(announce(access))))
+
+const announce = (access: McpAccess) => {
+  switch (access._tag) {
+    case "Disabled":
+      return Effect.logInfo(`MCP disabled at ${MCP_PATH}: grant READER_MCP_TOKEN or set MCP_TOKEN to enable it`)
+    case "Token":
+      return Effect.logInfo(`MCP listening on ${MCP_PATH}, authenticated by its own bearer token`)
+    case "Router":
+      return Effect.logWarning(
+        `MCP listening on ${MCP_PATH}, trusting the platform to authenticate callers. ` +
+          `${MCP_PATH} must NOT appear in public_paths — if it does, this endpoint is open to anyone.`,
+      )
+  }
+}

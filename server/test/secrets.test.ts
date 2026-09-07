@@ -1,7 +1,7 @@
 import { Effect, Layer, Option, Redacted } from "effect"
 import { describe, expect, it } from "vitest"
 import { extractSecret, Secrets, type SecretsShape } from "../src/adapters/outbound/secrets/BottleSecrets.js"
-import { MCP_TOKEN_SECRET, resolveMcpToken } from "../src/infrastructure/Config.js"
+import { MCP_TOKEN_SECRET, parseMcpAuth, resolveMcpToken } from "../src/infrastructure/Config.js"
 
 const withSecrets = (get: SecretsShape["get"]) => Layer.succeed(Secrets, { get })
 
@@ -46,5 +46,19 @@ describe("MCP token resolution", () => {
 
   it("is null when neither is present, which leaves MCP disabled", async () => {
     expect(await run(resolveMcpToken(null), nothing)).toBeNull()
+  })
+})
+
+describe("MCP auth mode", () => {
+  it("guards itself unless the platform is named explicitly", () => {
+    expect(parseMcpAuth("")).toBe("token")
+    // A typo must not silently drop the check.
+    expect(parseMcpAuth("rooter")).toBe("token")
+    expect(parseMcpAuth("none")).toBe("token")
+  })
+
+  it("hands authentication to the platform on request", () => {
+    expect(parseMcpAuth("router")).toBe("router")
+    expect(parseMcpAuth(" Router ")).toBe("router")
   })
 })

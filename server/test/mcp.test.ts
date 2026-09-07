@@ -3,6 +3,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { Effect, Fiber, Layer, Redacted } from "effect"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { HttpServerLive } from "../src/adapters/inbound/http/HttpServerLive.js"
+import { mcpAccess, type McpAccess } from "../src/adapters/inbound/mcp/McpHttp.js"
 import { StaticFeedCatalogLive } from "../src/adapters/outbound/catalog/StaticFeedCatalog.js"
 import { FastXmlOpmlCodecLive } from "../src/adapters/outbound/opml/FastXmlOpmlCodec.js"
 import { SqlitePersistenceLive } from "../src/adapters/outbound/sqlite/index.js"
@@ -11,36 +12,39 @@ import { ApplicationLive } from "../src/application/index.js"
 import { MemoryFeedSource, makeState, parsedFeed } from "./support/InMemoryAdapters.js"
 
 const TOKEN = "test-token-not-a-secret"
-const PORT = 3699
-const ENDPOINT = `http://127.0.0.1:${PORT}/mcp`
-
-const state = makeState()
-state.remote.set("https://example.com/rss", parsedFeed())
+const ENDPOINT = "http://127.0.0.1:3699/mcp"
+// A second server in the mode where Cloud in a Bottle authenticates the caller
+// and this app serves whoever the router let through.
+const ROUTER_ENDPOINT = "http://127.0.0.1:3700/mcp"
 
 /** The real server, with only the network and the clock faked out. */
-const TestServer = HttpServerLive({
-  host: "127.0.0.1",
-  port: PORT,
-  staticDir: new URL("./fixtures", import.meta.url).pathname,
-  mcpToken: Redacted.make(TOKEN),
-}).pipe(
-  Layer.provide(
-    ApplicationLive.pipe(
-      Layer.provide(SqlitePersistenceLive({ path: ":memory:" })),
-      Layer.provide(MemoryFeedSource(state)),
-      Layer.provide(CryptoIdGeneratorLive),
-      Layer.provide(FastXmlOpmlCodecLive),
-      Layer.provide(StaticFeedCatalogLive),
+const makeServer = (port: number, access: McpAccess) => {
+  const state = makeState()
+  state.remote.set("https://example.com/rss", parsedFeed())
+  return HttpServerLive({
+    host: "127.0.0.1",
+    port,
+    staticDir: new URL("./fixtures", import.meta.url).pathname,
+    mcpAccess: access,
+  }).pipe(
+    Layer.provide(
+      ApplicationLive.pipe(
+        Layer.provide(SqlitePersistenceLive({ path: ":memory:" })),
+        Layer.provide(MemoryFeedSource(state)),
+        Layer.provide(CryptoIdGeneratorLive),
+        Layer.provide(FastXmlOpmlCodecLive),
+        Layer.provide(StaticFeedCatalogLive),
+      ),
     ),
-  ),
-)
+  )
+}
 
-let shutdown: (() => Promise<void>) | undefined
+const shutdowns: Array<() => Promise<void>> = []
 
-const connect = async (token = TOKEN) => {
+const connect = async (token: string | null = TOKEN, endpoint = ENDPOINT) => {
   const client = new Client({ name: "test", version: "1.0.0" })
-  const transport = new StreamableHTTPClientTransport(new URL(ENDPOINT), {
-    requestInit: { headers: { authorization: `Bearer ${token}` } },
+  const transport = new StreamableHTTPClientTransport(new URL(endpoint), {
+    ...(token === null ? {} : { requestInit: { headers: { authorization: `Bearer ${token}` } } }),
   })
   // The SDK types sessionId as optional-undefined, which exactOptionalPropertyTypes
   // rejects against its own Transport interface.
@@ -51,25 +55,28 @@ const connect = async (token = TOKEN) => {
 const textOf = (result: unknown): string =>
   ((result as { content: Array<{ text?: string }> }).content ?? []).map((c) => c.text ?? "").join("\n")
 
-beforeAll(async () => {
-  const fiber = Effect.runFork(Layer.launch(TestServer))
-  shutdown = async () => {
-    await Effect.runPromise(Fiber.interrupt(fiber))
-  }
+const start = async (endpoint: string, port: number, access: McpAccess) => {
+  const fiber = Effect.runFork(Layer.launch(makeServer(port, access)))
+  shutdowns.push(() => Effect.runPromise(Fiber.interrupt(fiber)))
   // Wait for the port to accept connections.
   for (let i = 0; i < 60; i++) {
     try {
-      await fetch(ENDPOINT, { method: "POST" })
+      await fetch(endpoint, { method: "POST" })
       return
     } catch {
       await new Promise((r) => setTimeout(r, 100))
     }
   }
-  throw new Error("server did not start")
-}, 20_000)
+  throw new Error(`server on ${port} did not start`)
+}
+
+beforeAll(async () => {
+  await start(ENDPOINT, 3699, mcpAccess("token", Redacted.make(TOKEN)))
+  await start(ROUTER_ENDPOINT, 3700, mcpAccess("router", null))
+}, 30_000)
 
 afterAll(async () => {
-  await shutdown?.()
+  await Promise.all(shutdowns.map((stop) => stop()))
 })
 
 describe("MCP server", () => {
@@ -148,6 +155,28 @@ describe("MCP server", () => {
     const saved = JSON.parse(textOf(await client.callTool({ name: "list_entries", arguments: { savedOnly: true } })))
     expect(saved.entries).toHaveLength(1)
     await client.close()
+  })
+
+  it("stays enabled in router mode with no token of its own", async () => {
+    // The platform has already authenticated anyone who gets this far, and the
+    // Authorization header it forwards carries *its* token, not ours — so a
+    // second check here could only reject a caller the owner already approved.
+    const client = await connect(null, ROUTER_ENDPOINT)
+    const { tools } = await client.listTools()
+    expect(tools.map((t) => t.name)).toContain("list_feeds")
+    await client.close()
+
+    const foreign = await fetch(ROUTER_ENDPOINT, {
+      method: "POST",
+      headers: { authorization: "Bearer some-bottle-api-token" },
+      body: "{}",
+    })
+    expect(foreign.status).not.toBe(401)
+  })
+
+  it("falls back to disabled rather than open when a token mode has no token", () => {
+    expect(mcpAccess("token", null)).toEqual({ _tag: "Disabled" })
+    expect(mcpAccess("router", null)).toEqual({ _tag: "Router" })
   })
 
   it("reports a domain failure as a readable tool error, not a crash", async () => {
