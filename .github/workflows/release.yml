@@ -1,0 +1,144 @@
+name: Release
+
+# Publishing a GitHub release builds the desktop app on each platform and
+# attaches the installers to that release. Run it by hand to check a change to
+# the packaging without cutting a release: the installers are uploaded as
+# workflow artifacts instead.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The Node the desktop app actually runs on is the one Electron ships; this is
+  # only what builds it. Matching the major version keeps the two honest.
+  NODE_VERSION: "24"
+  # One cache location on every platform, rather than three OS-specific ones.
+  ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+  ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+
+jobs:
+  check:
+    name: Typecheck and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  desktop:
+    name: ${{ matrix.name }}
+    needs: check
+    runs-on: ${{ matrix.os }}
+    # One platform failing should still leave the others downloadable.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS
+            target: --mac
+          - os: windows-latest
+            name: Windows
+            target: --win
+          - os: ubuntu-latest
+            name: Linux
+            target: --linux
+    permissions:
+      # electron-builder attaches the installers to the release.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # Electron and its per-platform builder dependencies are hundreds of
+      # megabytes, and neither changes between runs of the same version.
+      - name: Cache Electron downloads
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: electron-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Use the release tag as the app version
+        # The version in package.json is what ends up in the installer's name
+        # and in the app's About box. A release of v1.2.3 that ships "0.1.0"
+        # helps nobody.
+        if: github.event_name == 'release'
+        shell: bash
+        run: |
+          version="${{ github.event.release.tag_name }}"
+          version="${version#v}"
+          node -e "
+            const fs = require('node:fs')
+            for (const path of ['package.json', 'desktop/package.json']) {
+              const pkg = JSON.parse(fs.readFileSync(path, 'utf8'))
+              pkg.version = process.argv[1]
+              fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n')
+            }
+          " "$version"
+
+      - name: Build the client and the server
+        run: pnpm build
+
+      - name: Bundle the desktop main process
+        run: pnpm --filter @radar/desktop build
+
+      - name: Package the desktop app
+        # Built, never published by electron-builder itself: its GitHub
+        # publisher looks for a release tagged v${version}, which quietly
+        # uploads nothing if a release was tagged any other way. The upload
+        # below targets the release that triggered this run, whatever its name.
+        run: pnpm --filter @radar/desktop exec electron-builder ${{ matrix.target }} --publish never
+        env:
+          # There is no signing identity on a runner, and without this
+          # electron-builder goes looking for one and fails the build rather
+          # than producing the unsigned app we actually want. The README says
+          # what signing would take.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Attach the installers to the release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          # latest-*.yml describes the build for auto-update; harmless now and
+          # needed the day Radar grows an updater.
+          files=(desktop/release/*.dmg desktop/release/*.zip desktop/release/*.exe desktop/release/*.AppImage desktop/release/*.deb desktop/release/latest*.yml)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No installers were produced" >&2
+            exit 1
+          fi
+          printf 'uploading %s\n' "${files[@]}"
+          gh release upload "${{ github.event.release.tag_name }}" "${files[@]}" --clobber
+
+      - name: Upload the installers as artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-${{ runner.os }}
+          path: |
+            desktop/release/*.dmg
+            desktop/release/*.zip
+            desktop/release/*.exe
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+          if-no-files-found: error
