@@ -36,11 +36,11 @@
 
 <br>
 
-Radar is what Google Reader would be if it were built today: dense, quick, and entirely
-driven from the keyboard. It is single-user by design — no accounts, no sign-in screen.
-Under the hood it is an [Effect v4](https://effect.website) backend in a hexagonal
-architecture, which is why the same reader can be driven by a browser, a desktop window,
-an HTTP API or an MCP client without four implementations.
+Radar is what Google Reader would be if someone built it today: dense, quick, and driven
+from the keyboard. It is single-user by design, with no accounts and no sign-in screen.
+The backend is [Effect v4](https://effect.website) in a hexagonal architecture, which is
+why a browser, a desktop window, an HTTP API and an MCP client all drive the same reader
+without four implementations.
 
 ## Two ways to run it
 
@@ -49,15 +49,15 @@ an HTTP API or an MCP client without four implementations.
 | **What it is** | Deployed behind a private reverse proxy, used in the browser or installed as a PWA | A local-first app for macOS, Windows and Linux |
 | **Where the data lives** | On the server, in SQLite | On your machine, in SQLite |
 | **Reach it from** | Every device you own | The machine it is installed on |
-| **Authentication** | Your reverse proxy — Radar has none of its own | None needed; it listens on loopback only |
+| **Authentication** | Your reverse proxy. Radar has none of its own | None needed, it listens on loopback only |
 | **Agents (MCP)** | `https://<instance>/mcp`, authenticated by your platform | `http://127.0.0.1:8787/mcp`, with a token the app generates |
 | **Start with** | `bottle app deploy` or the `Dockerfile` | `pnpm desktop:package` |
 
 They are the same application: identical domain, use cases and adapters, differing only in
 which composition root starts them and where the database file sits. The desktop app runs
-the entire backend inside Electron's main process — SQLite comes from `node:sqlite`, which
-is part of the runtime Electron already ships, so there is no native module to rebuild and
-no separate server to install.
+the whole backend inside Electron's main process. SQLite comes from `node:sqlite`, part of
+the runtime Electron already ships, so there is no native module to rebuild and no
+separate server to install.
 
 They do not sync with each other. Pick the one that matches how you read: one machine, or
 all of them.
@@ -70,16 +70,16 @@ all of them.
 
 **Reads everything.**
 RSS 2.0, Atom, RSS 1.0 and JSON Feed. Paste a site URL and autodiscovery finds the feed.
-Background refresh uses conditional requests, so publishers are asked *whether* there is
-news, not for all of it again.
+Background refresh sends conditional requests, so it asks a publisher *whether* there is
+news instead of downloading the whole feed again.
 
 </td>
 <td width="50%" valign="top">
 
 **Discover, properly.**
-Live search over millions of feeds with reader counts, posting cadence and icons on every
-result — the directory experience Feedly used to have. Preview the latest posts before
-you commit.
+Live search over millions of feeds, with reader counts, posting cadence and an icon on
+every result. It is the directory Feedly used to have. Preview the latest posts before you
+subscribe.
 
 </td>
 </tr>
@@ -88,15 +88,15 @@ you commit.
 
 **Built for the keyboard.**
 `j`/`k` through entries, `s` to save, `m` to toggle read, `v` to open the original,
-`g a`/`g s`/`g d` to jump around. Every shortcut is shown on its button on desktop, so
-learning it is a side effect of using it.
+`g a`/`g s`/`g d` to jump around. On desktop each button carries its own shortcut, so you
+learn them by using the app.
 
 </td>
 <td valign="top">
 
-**Two layouts, one taste.**
-Split view with a reading pane or an expanded single column, a compact row density, and
-light and dark themes on cool neutrals with a blue accent. All remembered.
+**Two layouts.**
+Split view with a reading pane, or one expanded column. A compact row density. Light and
+dark themes on cool neutrals with a blue accent. Radar remembers each of those choices.
 
 </td>
 </tr>
@@ -104,17 +104,17 @@ light and dark themes on cool neutrals with a blue accent. All remembered.
 <td valign="top">
 
 **Installable and offline.**
-A PWA with a hand-written service worker: the shell is precached, and feeds and articles
-you have opened are there when the network is not. Responsive from a 320px phone to a
-wide desktop.
+A PWA with a hand-written service worker. It precaches the shell and keeps the feeds and
+articles you have opened readable when the network is gone. Responsive from a 320px phone
+to a wide desktop.
 
 </td>
 <td valign="top">
 
 **Open to agents.**
-Fourteen MCP tools over Streamable HTTP — list, read, triage, subscribe, search the
-directory — on the same application services the UI uses. Authenticated by your
-platform's token, or by one of its own.
+Fourteen MCP tools over Streamable HTTP for listing, reading, triaging, subscribing and
+searching the directory, all on the same application services the UI uses. Your platform's
+token authenticates the caller, or Radar's own does.
 
 </td>
 </tr>
@@ -141,7 +141,13 @@ pnpm build          # web/dist + server/dist
 pnpm start          # serves the API and the built client on $PORT (default 8080)
 ```
 
-### Run the desktop app
+### Install the desktop app
+
+Grab an installer from [Releases](https://github.com/akoenig/radar/releases) — `.dmg` for
+macOS, `.exe` for Windows, `.AppImage` or `.deb` for Linux. Every published release is
+built on all three platforms by GitHub Actions and the installers are attached to it.
+
+Or build it yourself:
 
 ```sh
 pnpm install
@@ -149,15 +155,22 @@ pnpm desktop                # build everything, then launch the Electron app
 pnpm desktop:package        # installers in desktop/release for the current OS
 ```
 
-Data lives in Electron's per-user directory — `~/Library/Application Support/Radar` on
-macOS, `%APPDATA%\Radar` on Windows, `~/.config/Radar` on Linux — with **File → Open data
-folder** to get there. **File → Copy MCP endpoint** puts the local URL and its token on the
-clipboard, which is all a local agent needs.
+Data lives in Electron's per-user directory: `~/Library/Application Support/Radar` on
+macOS, `%APPDATA%\Radar` on Windows, `~/.config/Radar` on Linux. **File → Open data
+folder** takes you there. **File → Copy MCP endpoint** puts the local URL and its token on
+the clipboard, which is all a local agent needs.
 
-Packaged builds are unsigned by default, so macOS asks you to confirm on first launch
-(right-click → Open) and Windows shows a SmartScreen notice. Signing is configuration, not
-code: add `mac.identity` and a `CSC_LINK` for Windows in `desktop/electron-builder.yml`.
-The Apple side needs a paid Developer account before notarization will work at all.
+Packaged builds are unsigned, so macOS asks you to confirm on first launch (right-click →
+Open) and Windows shows a SmartScreen notice. Signing is configuration, not code: add
+`mac.identity` and a `CSC_LINK` for Windows in `desktop/electron-builder.yml`, and the
+matching secrets to the release workflow. The Apple side needs a paid Developer account
+before notarization will work at all.
+
+**Cutting a release.** Publish a GitHub release tagged `vX.Y.Z`; `.github/workflows/
+release.yml` typechecks, tests, builds on macOS, Windows and Linux, and attaches the
+installers. The tag sets the version stamped into the app, so the download names match
+the release. To exercise the pipeline without publishing anything, run the workflow by
+hand — it uploads the installers as workflow artifacts instead.
 
 ### Run the image
 
@@ -178,8 +191,8 @@ bottle app logs radar --follow
 ```
 
 Radar listens on `8080`, keeps its database under `BOTTLE_APP_DATA_DIR`, answers the
-router's health check at `/api/health`, and relies on the router's owner authentication —
-no path is public.
+router's health check at `/api/health`, and relies on the router's owner authentication.
+No path is public.
 
 ## Keyboard
 
@@ -199,25 +212,25 @@ Press `?` inside the app for the same list.
 
 ## Discover
 
-Search runs against `cloud.feedly.com/v3/search/feeds` — the index behind Feedly's own
-search box. It answers with reader counts, posts per week and an icon, which is what makes
-a stranger's feed judgeable before subscribing. No account or key: this is the endpoint
-Feedly leaves open. It is also undocumented, so the adapter treats every failure as
-expected — results are cached for fifteen minutes, a changed field costs one result rather
-than the search, and when the directory cannot be reached at all a bundled catalog of
-about forty feeds answers instead and the client says so.
+Search runs against `cloud.feedly.com/v3/search/feeds`, the index behind Feedly's own
+search box. It answers with reader counts, posts per week and an icon, which is what lets
+you judge a stranger's feed before subscribing. No account or key needed, because Feedly
+leaves this endpoint open. It is also undocumented, so the adapter treats every failure as
+expected. It caches results for fifteen minutes, a changed field costs one result rather
+than the whole search, and when the directory cannot be reached at all a bundled catalog
+of about forty feeds answers instead, and the client says so.
 
-Two consequences worth knowing. Search terms leave your instance: a query is sent to
-Feedly with nothing else — no account, no cookie, no subscription list. And the directory
-is someone else's service, so `FeedDirectory` is a port like any other; swapping in a
-different index, or one that never leaves the machine, is a change in the composition
-root and nowhere else.
+Two consequences worth knowing. Search terms leave your instance. Radar sends Feedly the
+query and nothing else, no account, no cookie, no subscription list. And the directory is
+someone else's service, so `FeedDirectory` is a port like any other. Swapping in a
+different index, or one that never leaves the machine, is a change in the composition root
+and nowhere else.
 
 ## Agents (MCP)
 
 Radar speaks the [Model Context Protocol](https://modelcontextprotocol.io) at `/mcp`
 (Streamable HTTP). It is a driving adapter over the same application services as the
-HTTP API — no separate data path, no separate rules.
+HTTP API. No separate data path, no separate rules.
 
 Tools: `list_feeds`, `list_entries`, `get_entry`, `get_stats`, `list_categories`,
 `mark_read`, `mark_all_read`, `set_saved`, `subscribe`, `unsubscribe`, `discover_feeds`,
@@ -226,10 +239,10 @@ markup stripped, which is what an agent actually wants to read.
 
 ### Connecting
 
-Who authenticates the caller is set by `MCP_AUTH`, and the right answer differs on and off
+`MCP_AUTH` decides who authenticates the caller, and the right answer differs on and off
 a Cloud in a Bottle instance.
 
-**On an instance — let the platform do it (`MCP_AUTH=router`, what the image ships).**
+**On an instance, let the platform do it (`MCP_AUTH=router`, what the image ships).**
 Every route of a non-public app already requires the owner, and that means an API token
 as much as a browser session. So an MCP client needs no login:
 
@@ -241,28 +254,28 @@ Point a client at `https://<your-instance>/mcp` with that token as
 `Authorization: Bearer <token>`. `/mcp` stays out of `public_paths`, so it is never
 exposed to the internet, and there is no second secret to manage.
 
-In this mode Radar does not check a token of its own. It cannot: there is one
-`Authorization` header, and by the time the request arrives it carries the router's token —
-a second check could only reject a caller the owner already approved. Which is why the
-mode holds *only* while `/mcp` is behind the login. So the server reads
+In this mode Radar does not check a token of its own. It cannot. There is one
+`Authorization` header, and by the time the request arrives it carries the router's token,
+so a second check could only reject a caller the owner already approved. Which is why the
+mode holds *only* while `/mcp` sits behind the login. The server reads
 `cloudinabottle.toml` at startup, and if `public_paths` covers `/mcp` it refuses router
 mode and falls back to its own token rather than serving the reader open. The manifest
 cannot set environment variables, so `MCP_AUTH` lives in the `Dockerfile`.
 
-**Locally, or behind a public path — the app's own token (`MCP_AUTH=token`).**
+**Locally, or behind a public path, use the app's own token (`MCP_AUTH=token`).**
 
 ```sh
 MCP_AUTH=token MCP_TOKEN=$(openssl rand -hex 32) pnpm start
 ```
 
-The endpoint is served only when a token is configured; with none there is nothing to
-authenticate with, so the route answers 404 rather than serving Radar open. Tokens are
-compared in constant time. On a deployed instance the token comes from the secrets
-service: `cloudinabottle.toml` asks the owner to grant `READER_MCP_TOKEN`, and the server
-fetches it at startup through `$BOTTLE_ROUTER_URL/api/services/v2/call/secrets/get`. The
-granted secret wins over `MCP_TOKEN`. This is the mode to use if you ever add `/mcp` to
-`public_paths` — deliberately not the default, because it moves the endpoint out from
-behind the router's authentication and leaves one token in front of everything.
+Radar serves the endpoint only when a token is configured. With none there is nothing to
+authenticate with, so the route answers 404 rather than serving Radar open. It compares
+tokens in constant time. On a deployed instance the token comes from the secrets service:
+`cloudinabottle.toml` asks the owner to grant `READER_MCP_TOKEN`, and the server fetches
+it at startup through `$BOTTLE_ROUTER_URL/api/services/v2/call/secrets/get`. The granted
+secret wins over `MCP_TOKEN`. Use this mode if you ever add `/mcp` to `public_paths`. It is
+deliberately not the default, because it moves the endpoint out from behind the router's
+authentication and leaves one token in front of everything.
 
 ## Architecture
 
@@ -286,19 +299,19 @@ server/   Effect v4 backend, hexagonal
 web/      Vite + React 19 client, TanStack Query, hand-written service worker
 desktop/  Electron main process: the second composition root
   src/main.ts   window, menu, data directory, and the embedded server
-  src/port.ts   picks a stable port, so the origin — and its localStorage — survives
+  src/port.ts   picks a stable port, so the origin and its localStorage survive
   build.mjs     bundles the main process and the server into one file with esbuild
 ```
 
-Every port is an Effect `Context.Service`; every adapter is a `Layer`. The application
+Every port is an Effect `Context.Service`, and every adapter is a `Layer`. The application
 layer depends on ports only, and `infrastructure/AppLayer.ts` is the single place that
-decides which adapter satisfies which port — which is exactly why a desktop build costs a
-new entry point rather than a second implementation: `desktop/src/main.ts` calls the same
-`makeAppLayer`, with a different data directory and a loopback address. Tests swap in
+decides which adapter satisfies which port. That is why a desktop build costs one new
+entry point instead of a second implementation. `desktop/src/main.ts` calls the same
+`makeAppLayer` with a different data directory and a loopback address. Tests swap in
 `test/support/InMemoryAdapters.ts` and exercise the real use cases without SQLite or the
 network.
 
-OpenAPI is served at `/api/openapi.json`. The main endpoints:
+Radar serves OpenAPI at `/api/openapi.json`. The main endpoints:
 
 - `GET/POST /api/feeds`, `PATCH/DELETE /api/feeds/:id`, `POST /api/feeds/:id/refresh`
 - `GET/POST /api/categories`, `PATCH/DELETE /api/categories/:id`
@@ -317,8 +330,8 @@ OpenAPI is served at `/api/openapi.json`. The main endpoints:
 | `STATIC_DIR` | `../web/dist` | Built client to serve |
 | `REFRESH_INTERVAL_MINUTES` | `15` | Background refresh cadence |
 | `MCP_AUTH` | `token` | `router` trusts Cloud in a Bottle to authenticate `/mcp`; `token` makes Radar the only gate. The image ships `router`. |
-| `MCP_TOKEN` | — | Bearer token for `/mcp` in `token` mode. On an instance the granted `READER_MCP_TOKEN` secret wins. |
-| `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` | — | Honoured for every outbound fetch |
+| `MCP_TOKEN` | none | Bearer token for `/mcp` in `token` mode. On an instance the granted `READER_MCP_TOKEN` secret wins. |
+| `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` | none | Honoured on every outbound fetch |
 
 ## Notes
 
