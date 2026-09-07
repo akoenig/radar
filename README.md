@@ -13,7 +13,8 @@ accounts: it is meant to run behind the owner login of a
   `2` (split: list beside a reading pane), plus a compact row density on `c`. Both
   choices are remembered.
 - Everything reachable from the keyboard: `j`/`k`, `s`, `m`, `v`, `a`, `/`, `g a`, `?` …
-- Light and dark "ink on paper" themes, in one sans typeface.
+- Compact, keyboard-first interface in one sans typeface, with light and dark themes
+  built on cool neutrals and a blue accent.
 - Installable as a PWA, and readable offline: the shell is precached and feeds and
   articles you have already opened are served from cache when the network is gone.
 - Responsive from a 320px phone to a wide desktop, with touch-sized targets and

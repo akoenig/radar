@@ -19,7 +19,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -148,8 +148,8 @@ kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-s);
   color: var(--ink-3);
   transition:
@@ -172,14 +172,14 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: var(--radius-s);
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--ink);
   font-weight: 500;
-  font-size: 13px;
+  font-size: 12.5px;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -199,14 +199,13 @@ kbd {
   cursor: default;
 }
 .button.primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
-.button.primary:hover:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+}
+.button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 .button.danger {
   color: var(--danger);
@@ -269,19 +268,19 @@ kbd {
 .sidebar {
   background: var(--bg);
   border-right: 1px solid var(--line);
-  padding: 18px 10px 12px;
+  padding: 14px 8px 10px;
   overflow: hidden;
 }
 
 .brand {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  padding: 0 10px 14px;
+  gap: 8px;
+  padding: 0 8px 12px;
 }
 .brand-mark {
   font-family: var(--font-display);
-  font-size: 21px;
+  font-size: 17px;
   font-weight: 620;
   letter-spacing: -0.035em;
   color: var(--ink);
@@ -299,18 +298,18 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .nav-item,
 .tree-button {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
-  height: 30px;
-  padding: 0 10px;
+  height: 27px;
+  padding: 0 8px;
   border-radius: var(--radius-s);
   color: var(--ink-2);
   text-align: left;
@@ -342,8 +341,8 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px 6px;
-  font-size: 11px;
+  padding: 0 8px 4px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -491,7 +490,7 @@ kbd {
 }
 
 .list-header {
-  padding: 14px 12px 10px 16px;
+  padding: 10px 10px 8px 14px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   display: flex;
@@ -507,7 +506,7 @@ kbd {
 .list-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.022em;
   min-width: 0;
@@ -541,8 +540,8 @@ kbd {
   background: var(--surface-2);
 }
 .segmented button {
-  height: 24px;
-  padding: 0 10px;
+  height: 22px;
+  padding: 0 9px;
   border-radius: 5px;
   font-size: 12px;
   font-weight: 500;
@@ -614,7 +613,7 @@ kbd {
 
 .entry-row {
   position: relative;
-  padding: 12px 16px 13px 24px;
+  padding: 9px 14px 10px 22px;
   border-bottom: 1px solid var(--line);
   cursor: pointer;
   transition: background var(--t-fast) var(--ease);
@@ -637,17 +636,17 @@ kbd {
 .entry-meta {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 11.5px;
+  gap: 6px;
+  font-size: 11px;
   color: var(--ink-3);
   min-width: 0;
 }
 .unread-dot {
   position: absolute;
-  left: 11px;
-  top: 17px;
-  width: 6px;
-  height: 6px;
+  left: 10px;
+  top: 14px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--accent);
   transition: opacity var(--t-med) var(--ease);
@@ -673,10 +672,10 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 .entry-title {
-  margin: 4px 0 3px;
+  margin: 3px 0 2px;
   font-family: var(--font-display);
-  font-size: 15px;
-  line-height: 1.32;
+  font-size: 13.5px;
+  line-height: 1.34;
   font-weight: 570;
   letter-spacing: -0.014em;
   color: var(--ink);
@@ -688,7 +687,7 @@ kbd {
 }
 .entry-snippet {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--ink-3);
   display: -webkit-box;
@@ -888,7 +887,7 @@ kbd {
   background: var(--surface);
 }
 .discover-header {
-  padding: 20px 24px 14px;
+  padding: 16px 22px 12px;
   border-bottom: 1px solid var(--line);
   display: flex;
   flex-direction: column;
@@ -972,9 +971,9 @@ kbd {
   color: var(--ink);
 }
 .chip.on {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
 }
 
 .discover-scroll {
@@ -1019,8 +1018,8 @@ kbd {
 .catalog-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 15px 16px 13px;
+  gap: 7px;
+  padding: 12px 14px 11px;
   border: 1px solid var(--line);
   border-radius: var(--radius-m);
   background: var(--bg);
@@ -1118,7 +1117,7 @@ kbd {
 .catalog-preview time {
   flex: none;
   font-size: 11px;
-  color: var(--ink-4);
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .catalog-preview-status {
@@ -1151,7 +1150,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 8px 18px;
   border-bottom: 1px solid var(--line);
   min-height: 49px;
 }
@@ -1165,7 +1164,7 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
+  height: 26px;
   padding: 0 10px 0 9px;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -1252,9 +1251,9 @@ kbd {
 }
 
 .article {
-  max-width: 70ch;
+  max-width: 68ch;
   margin: 0 auto;
-  padding: 44px 48px 96px;
+  padding: 36px 40px 88px;
   animation: rise var(--t-med) var(--ease);
 }
 .article-header {
@@ -1497,7 +1496,7 @@ kbd {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 20px 20px 0 24px;
+  padding: 16px 16px 0 20px;
 }
 .dialog-title {
   margin: 0;
@@ -1512,7 +1511,7 @@ kbd {
   color: var(--ink-3);
 }
 .dialog-body {
-  padding: 18px 24px 24px;
+  padding: 14px 20px 20px;
   overflow-y: auto;
 }
 
