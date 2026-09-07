@@ -101,3 +101,8 @@ OpenAPI is served at `/api/openapi.json`. Main endpoints:
 - **Docker.** The image is Debian-based on purpose: `effect` depends on `msgpackr`,
   whose optional native accelerator only ships glibc prebuilds, so an Alpine build
   would try to compile it from source and fail.
+- **Build resources.** Building needs far more memory than running: `pnpm install`
+  peaks around 604 MB and `tsc` around 584 MB, against roughly 185 MB for the
+  running server. `build_memory_mb` in `cloudinabottle.toml` defaults to
+  `memory_mb`, so it is set explicitly; too low a value shows up as a build killed
+  with exit status 137.

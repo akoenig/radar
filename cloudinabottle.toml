@@ -7,9 +7,19 @@ description = "A keyboard-first feed reader in the spirit of Google Reader"
 image = "Dockerfile"
 port = 8080
 
+# Measured peaks rather than guesses.
+#
+# Build: pnpm install ~604 MB, `tsc` for the server ~584 MB, and the Vite/Rollup
+# bundle ~496 MB. build_memory_mb defaults to memory_mb, so leaving it unset
+# capped the build at 256 MB and the OOM killer stopped the install (exit 137).
+#
+# Runtime: ~174 MB idle, ~185 MB after subscribing to a large feed, refreshing
+# every feed and running a 200-item query. 512 MB leaves room for the six
+# concurrent fetches a refresh can have in flight.
 [resources]
-memory_mb = 256
-cpu_cores = 0.25
+memory_mb = 512
+build_memory_mb = 2048
+cpu_cores = 0.5
 
 [data]
 # SQLite lives under $BOTTLE_APP_DATA_DIR, which the server picks up automatically.
