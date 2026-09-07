@@ -15,6 +15,7 @@ accounts: it is meant to run behind the owner login of a
 - Everything reachable from the keyboard: `j`/`k`, `s`, `m`, `v`, `a`, `/`, `g a`, `?` …
 - Compact, keyboard-first interface in one sans typeface, with light and dark themes
   built on cool neutrals and a blue accent.
+- Exposes the whole reader to agents over **MCP** (13 tools), off by default.
 - Installable as a PWA, and readable offline: the shell is precached and feeds and
   articles you have already opened are served from cache when the network is gone.
 - Responsive from a 320px phone to a wide desktop, with touch-sized targets and
@@ -29,6 +30,7 @@ server/   Effect v4 backend, hexagonal architecture
   src/adapters
     inbound/http    HttpApi definition + handlers (driving adapter)
     inbound/scheduler  periodic refresh (driving adapter)
+    inbound/mcp     MCP tools over Streamable HTTP (driving adapter)
     outbound/sqlite repositories over node:sqlite (driven adapter)
     outbound/feed   HTTP fetcher, parser, autodiscovery (driven adapter)
     outbound/catalog  curated Discover catalog (driven adapter)
@@ -68,6 +70,7 @@ Configuration (environment variables):
 | `DATABASE_PATH` | `$DATA_DIR/reader.db` | SQLite file |
 | `STATIC_DIR` | `../web/dist` | Built client to serve |
 | `REFRESH_INTERVAL_MINUTES` | `15` | Background refresh cadence |
+| `MCP_TOKEN` | — | Bearer token for `/mcp`. Unset means the endpoint does not exist. |
 
 ## Deploy to Cloud in a Bottle
 
@@ -94,6 +97,41 @@ OpenAPI is served at `/api/openapi.json`. Main endpoints:
 - `POST /api/entries/mark`, `POST /api/entries/mark-all`, `PUT /api/entries/:id/saved`
 - `GET /api/stats`, `POST /api/refresh`, `GET /api/discover?url=`, `GET|POST /api/opml`
 - `GET /api/catalog` — the Discover directory, each entry flagged if already subscribed
+
+## MCP
+
+The reader speaks the [Model Context Protocol](https://modelcontextprotocol.io) at `/mcp`
+(Streamable HTTP), so an agent can read and triage your subscriptions. It is a driving
+adapter over the same application services as the HTTP API — no separate data path.
+
+Tools: `list_feeds`, `list_entries`, `get_entry`, `get_stats`, `list_categories`,
+`mark_read`, `mark_all_read`, `set_saved`, `subscribe`, `unsubscribe`, `discover_feeds`,
+`browse_catalog`, `refresh`. `get_entry` returns article text with markup stripped, which
+is what an agent actually wants to read.
+
+```sh
+MCP_TOKEN=$(openssl rand -hex 32) pnpm start
+```
+
+Then point a client at `https://<your-instance>/mcp` with
+`Authorization: Bearer $MCP_TOKEN`.
+
+**Security.** The endpoint is served only when `MCP_TOKEN` is set — with no token there is
+nothing to authenticate with, so the route is not registered at all rather than served
+open. Tokens are compared in constant time.
+
+Cloud in a Bottle keeps non-public paths behind the owner login, which an MCP client
+cannot carry, so reaching `/mcp` from outside the instance means adding it to
+`public_paths` in `cloudinabottle.toml`:
+
+```toml
+[routing]
+health_check = "/api/health"
+public_paths = ["/mcp"]   # only with MCP_TOKEN set — this bypasses the owner login
+```
+
+That is deliberately not enabled by default: it moves `/mcp` out from behind the router's
+authentication, leaving `MCP_TOKEN` as the only thing in front of your reader.
 
 ## Notes
 

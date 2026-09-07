@@ -1,8 +1,9 @@
-import { Layer } from "effect"
+import { Layer, type Redacted } from "effect"
 import { HttpRouter, HttpServerResponse, HttpStaticServer } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { NodeHttpServer } from "@effect/platform-node"
 import { createServer } from "node:http"
+import { McpHttpLive } from "../mcp/McpHttp.js"
 import { ReaderApi } from "./Api.js"
 import { CategoriesHandlersLive } from "./CategoriesHandlers.js"
 import { EntriesHandlersLive } from "./EntriesHandlers.js"
@@ -14,6 +15,8 @@ export interface HttpServerOptions {
   readonly port: number
   /** Directory holding the built web client; served with SPA fallback. */
   readonly staticDir: string
+  /** Bearer token guarding the MCP endpoint; when null the endpoint is not served. */
+  readonly mcpToken: Redacted.Redacted<string> | null
 }
 
 const ApiLive = HttpApiBuilder.layer(ReaderApi, { openapiPath: "/api/openapi.json" }).pipe(
@@ -36,6 +39,7 @@ export const HttpServerLive = (options: HttpServerOptions) =>
     Layer.mergeAll(
       ApiLive,
       ApiFallback,
+      McpHttpLive(options.mcpToken),
       HttpStaticServer.layer({
         root: options.staticDir,
         spa: true,

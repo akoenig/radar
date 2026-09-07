@@ -26,7 +26,7 @@ export const makeAppLayer = (config: AppConfigShape) => {
   const Application = ApplicationLive.pipe(Layer.provide(DrivenAdapters))
 
   const DrivingAdapters = Layer.mergeAll(
-    HttpServerLive({ host: config.host, port: config.port, staticDir: config.staticDir }),
+    HttpServerLive({ host: config.host, port: config.port, staticDir: config.staticDir, mcpToken: config.mcpToken }),
     RefreshSchedulerLive({ interval: config.refreshInterval, initialDelay: Duration.seconds(5) }),
   )
 

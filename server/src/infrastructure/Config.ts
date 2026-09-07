@@ -1,4 +1,4 @@
-import { Config, Context, Duration, Effect, Layer } from "effect"
+import { Config, Context, Duration, Effect, Layer, Redacted } from "effect"
 import { fileURLToPath } from "node:url"
 import { resolve } from "node:path"
 
@@ -8,6 +8,8 @@ export interface AppConfigShape {
   readonly databasePath: string
   readonly staticDir: string
   readonly refreshInterval: Duration.Duration
+  /** When absent, the MCP endpoint is not served at all. */
+  readonly mcpToken: Redacted.Redacted<string> | null
 }
 
 export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("@reader/AppConfig") {}
@@ -28,7 +30,15 @@ export const loadConfig: Effect.Effect<AppConfigShape, Config.ConfigError> = Eff
   const databasePath = yield* Config.string("DATABASE_PATH").pipe(Config.withDefault(resolve(dataDir, "reader.db")))
   const staticDir = yield* Config.string("STATIC_DIR").pipe(Config.withDefault(defaultStaticDir))
   const refreshMinutes = yield* Config.number("REFRESH_INTERVAL_MINUTES").pipe(Config.withDefault(15))
-  return { host, port, databasePath, staticDir, refreshInterval: Duration.minutes(Math.max(1, refreshMinutes)) }
+  const mcpSecret = yield* Config.string("MCP_TOKEN").pipe(Config.withDefault(""))
+  return {
+    host,
+    port,
+    databasePath,
+    staticDir,
+    refreshInterval: Duration.minutes(Math.max(1, refreshMinutes)),
+    mcpToken: mcpSecret.trim().length > 0 ? Redacted.make(mcpSecret.trim()) : null,
+  }
 })
 
 export const AppConfigLive = Layer.effect(AppConfig, loadConfig)
