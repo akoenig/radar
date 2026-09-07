@@ -278,9 +278,6 @@ OpenAPI is served at `/api/openapi.json`. The main endpoints:
 
 ## Notes
 
-- **Upgrading from "reader".** Radar shipped under that name first. On startup a missing
-  `radar.db` adopts an existing `reader.db` beside it, WAL and shared-memory files
-  included, so a rename costs nobody their subscriptions.
 - **Docker.** The image is Debian-based on purpose: `effect` depends on `msgpackr`, whose
   optional native accelerator only ships glibc prebuilds, so an Alpine build would try to
   compile it from source and fail.
