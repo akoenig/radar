@@ -1,6 +1,18 @@
 appId: org.openformation.radar
 productName: Radar
 copyright: André König
+# Not used to publish — the release workflow uploads the artifacts itself — but
+# this is what makes electron-builder emit latest-*.yml and app-update.yml, so
+# adding an updater later needs no rebuild of the pipeline.
+publish:
+  provider: github
+  owner: akoenig
+  repo: radar
+
+# Named after the product, not after the package: "@radar/desktop" would
+# otherwise leak into file names, and its slash into a directory.
+artifactName: ${productName}-${version}-${arch}.${ext}
+
 directories:
   buildResources: build
   output: release
@@ -21,6 +33,13 @@ mac:
 win:
   target: nsis
 linux:
+  # Without this the binary is named after the package (@radar/desktop) rather
+  # than the product, and it is also the deb package name.
+  executableName: radar
+  # Ties a running window to its launcher entry, so the taskbar shows Radar's
+  # icon and name rather than a generic Electron one. The name itself is
+  # desktopName in package.json, which is where electron-builder reads it.
+  syncDesktopName: true
   category: Network;News
   target:
     - AppImage

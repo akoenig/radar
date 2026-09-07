@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "description": "Radar as a local-first desktop app",
+  "homepage": "https://github.com/akoenig/radar",
+  "author": {
+    "name": "Andr\u00e9 K\u00f6nig",
+    "email": "andre.koenig@openformation.io"
+  },
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
@@ -22,5 +27,6 @@
     "esbuild": "^0.25.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
-  }
+  },
+  "desktopName": "radar.desktop"
 }
