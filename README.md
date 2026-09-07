@@ -143,9 +143,9 @@ pnpm start          # serves the API and the built client on $PORT (default 8080
 
 ### Install the desktop app
 
-Grab an installer from [Releases](https://github.com/akoenig/radar/releases) — `.dmg` for
-macOS, `.exe` for Windows, `.AppImage` or `.deb` for Linux. Every published release is
-built on all three platforms by GitHub Actions and the installers are attached to it.
+Grab an installer from [Releases](https://github.com/akoenig/radar/releases): `.dmg` for
+macOS, `.exe` for Windows, `.AppImage` or `.deb` for Linux. GitHub Actions builds every
+published release on all three platforms and attaches the installers to it.
 
 Or build it yourself:
 
@@ -166,11 +166,11 @@ Open) and Windows shows a SmartScreen notice. Signing is configuration, not code
 matching secrets to the release workflow. The Apple side needs a paid Developer account
 before notarization will work at all.
 
-**Cutting a release.** Publish a GitHub release tagged `vX.Y.Z`; `.github/workflows/
-release.yml` typechecks, tests, builds on macOS, Windows and Linux, and attaches the
-installers. The tag sets the version stamped into the app, so the download names match
-the release. To exercise the pipeline without publishing anything, run the workflow by
-hand — it uploads the installers as workflow artifacts instead.
+**Cutting a release.** Publish a GitHub release tagged `vX.Y.Z`, and
+`.github/workflows/release.yml` typechecks, tests, builds on macOS, Windows and Linux, and
+attaches the installers. The tag sets the version stamped into the app, so the download
+names match the release. To try the pipeline without publishing anything, run the workflow
+by hand. It uploads the installers as workflow artifacts instead.
 
 ### Run the image
 
