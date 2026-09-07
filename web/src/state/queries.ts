@@ -41,9 +41,16 @@ export const useEntries = (view: View, unreadOnly: boolean, search: string) => {
     queryFn: ({ pageParam }) => api.entries.list({ view, unreadOnly, search, cursor: pageParam, limit: PAGE_SIZE }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.next ?? undefined,
-    // The list is intentionally stable: read items stay until the user moves on.
+    // While a list is on screen it stays put: items you mark read keep their place
+    // instead of vanishing mid-read.
     staleTime: Number.POSITIVE_INFINITY,
     refetchOnWindowFocus: false,
+    // ...but that stability must not outlive the visit. Switching filter, feed or
+    // search swaps the query key, and a kept cache would be replayed on return —
+    // an "Unread" list captured before anything was read still lists read items,
+    // which is indistinguishable from the filter being broken. Dropping the cache
+    // the moment it goes inactive makes coming back re-ask the server.
+    gcTime: 0,
   })
   const entries = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data])
   return { ...query, entries }
