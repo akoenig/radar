@@ -6,6 +6,13 @@
     ],
     "module": "NodeNext",
     "moduleResolution": "nodenext",
+    // The desktop app imports @radar/server, whose types live in its build
+    // output. Resolving the package's "source" condition instead means a fresh
+    // clone typechecks without building the server first — CI does exactly
+    // that. Node and esbuild ignore the condition, so what ships is unchanged.
+    "customConditions": [
+      "source"
+    ],
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
