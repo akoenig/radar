@@ -1,5 +1,5 @@
-import { Layer } from "effect"
-import { HttpRouter, HttpServerResponse, HttpStaticServer } from "effect/unstable/http"
+import { Effect, Layer } from "effect"
+import { HttpRouter, HttpServer, HttpServerResponse, HttpStaticServer } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { NodeHttpServer } from "@effect/platform-node"
 import { createServer } from "node:http"
@@ -17,6 +17,12 @@ export interface HttpServerOptions {
   readonly staticDir: string
   /** How the MCP endpoint authenticates its callers, if it serves them at all. */
   readonly mcpAccess: McpAccess
+  /**
+   * Called with the address once the socket is bound. An embedder — the
+   * desktop app — asks for port 0 so the operating system picks a free port,
+   * and this is how it learns which one it got.
+   */
+  readonly onListening?: (address: string) => void
 }
 
 const ApiLive = HttpApiBuilder.layer(RadarApi, { openapiPath: "/api/openapi.json" }).pipe(
@@ -34,12 +40,16 @@ const ApiFallback = HttpRouter.add(
  * The HTTP driving adapter: API routes plus the static client, bound to a
  * Node server. Requires the application services.
  */
-export const HttpServerLive = (options: HttpServerOptions) =>
-  HttpRouter.serve(
+export const HttpServerLive = (options: HttpServerOptions) => {
+  const report = options.onListening
+  return HttpRouter.serve(
     Layer.mergeAll(
       ApiLive,
       ApiFallback,
       McpHttpLive(options.mcpAccess),
+      report === undefined
+        ? Layer.empty
+        : Layer.effectDiscard(HttpServer.addressFormattedWith((address) => Effect.sync(() => report(address)))),
       HttpStaticServer.layer({
         root: options.staticDir,
         spa: true,
@@ -49,3 +59,4 @@ export const HttpServerLive = (options: HttpServerOptions) =>
       }),
     ),
   ).pipe(Layer.provide(NodeHttpServer.layer(createServer, { host: options.host, port: options.port })))
+}

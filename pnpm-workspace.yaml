@@ -1,7 +1,11 @@
 packages:
   - server
   - web
+  - desktop
 
 allowBuilds:
   esbuild: true
+  electron: true
   msgpackr-extract: true
+  # Squirrel installers; Radar builds NSIS on Windows, so this never runs.
+  electron-winstaller: false

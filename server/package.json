@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/infrastructure/main.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/infrastructure/main.ts",
     "build": "tsc -p tsconfig.build.json",
@@ -29,5 +29,14 @@
   },
   "engines": {
     "node": ">=22.5.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./main": {
+      "default": "./dist/infrastructure/main.js"
+    }
   }
 }

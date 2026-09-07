@@ -1,0 +1,27 @@
+appId: org.openformation.radar
+productName: Radar
+copyright: André König
+directories:
+  buildResources: build
+  output: release
+# Everything is in the bundle, so nothing else needs to ship.
+files:
+  - dist/**
+# The static client is read from disk while serving; asar archives are fine for
+# require() but not for everything that opens a file, so keep the web assets out.
+asarUnpack:
+  - dist/web/**
+mac:
+  category: public.app-category.news
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+win:
+  target: nsis
+linux:
+  category: Network;News
+  target:
+    - AppImage
+    - deb

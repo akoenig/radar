@@ -16,7 +16,13 @@ import type { AppConfigShape } from "./Config.js"
  * Composition root. This is the only place that knows which adapter
  * satisfies which port.
  */
-export const makeAppLayer = (config: AppConfigShape) => {
+/**
+ * `onListening` is for embedders: the desktop app asks for port 0 and needs to
+ * be told which port it actually got before it can point a window at it.
+ */
+export type AppLayerOptions = AppConfigShape & { readonly onListening?: (address: string) => void }
+
+export const makeAppLayer = (config: AppLayerOptions) => {
   const DrivenAdapters = Layer.mergeAll(
     SqlitePersistenceLive({ path: config.databasePath }),
     HttpFeedSourceLive.pipe(Layer.provide(ProxyAwareHttpClientLive)),
@@ -34,6 +40,7 @@ export const makeAppLayer = (config: AppConfigShape) => {
       port: config.port,
       staticDir: config.staticDir,
       mcpAccess: mcpAccess(config.mcpAuth, config.mcpToken),
+      ...(config.onListening === undefined ? {} : { onListening: config.onListening }),
     }),
     RefreshSchedulerLive({ interval: config.refreshInterval, initialDelay: Duration.seconds(5) }),
   )

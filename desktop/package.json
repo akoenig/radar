@@ -1,0 +1,26 @@
+{
+  "name": "@radar/desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Radar as a local-first desktop app",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "electron dist/main.js",
+    "dev": "node build.mjs && electron dist/main.js",
+    "package": "node build.mjs && electron-builder",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@radar/server": "workspace:*",
+    "@types/node": "^22.15.0",
+    "effect": "4.0.0-rc.112",
+    "electron": "^44.2.0",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

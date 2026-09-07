@@ -8,7 +8,9 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm --filter @radar/web build && pnpm --filter @radar/server build",
     "start": "pnpm --filter @radar/server start",
-    "test": "pnpm --filter @radar/server test",
-    "typecheck": "pnpm -r typecheck"
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "desktop": "pnpm build && pnpm --filter @radar/desktop dev",
+    "desktop:package": "pnpm build && pnpm --filter @radar/desktop package"
   }
 }

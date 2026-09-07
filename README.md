@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>A keyboard-first feed reader for one person.</strong><br>
-  Everything worth reading, on one screen — and readable by your agents.
+  Run it on a server, or install it on your desktop. Same reader, same data model, one codebase.
 </p>
 
 <p align="center">
@@ -14,10 +14,12 @@
   <img alt="React 19" src="https://img.shields.io/badge/React-19-1f2937?style=flat-square&logo=react&logoColor=61dafb">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-1f2937?style=flat-square&logo=typescript&logoColor=3178c6">
   <img alt="PWA" src="https://img.shields.io/badge/PWA-installable-1f2937?style=flat-square">
+  <img alt="Desktop" src="https://img.shields.io/badge/Desktop-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-1f2937?style=flat-square">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-14%20tools-2563eb?style=flat-square">
 </p>
 
 <p align="center">
+  <a href="#two-ways-to-run-it">Two ways to run it</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#keyboard">Keyboard</a> ·
   <a href="#discover">Discover</a> ·
@@ -35,12 +37,30 @@
 <br>
 
 Radar is what Google Reader would be if it were built today: dense, quick, and entirely
-driven from the keyboard. It is single-user by design — no accounts, no sign-in screen —
-and meant to live behind the owner login of a [Cloud in a Bottle](https://cloudinabottle.org)
-instance or any private reverse proxy. Under the hood it is an
-[Effect v4](https://effect.website) backend in a hexagonal architecture, which is why the
-same reader can be driven by a browser, an HTTP API, or an MCP client without three
-implementations.
+driven from the keyboard. It is single-user by design — no accounts, no sign-in screen.
+Under the hood it is an [Effect v4](https://effect.website) backend in a hexagonal
+architecture, which is why the same reader can be driven by a browser, a desktop window,
+an HTTP API or an MCP client without four implementations.
+
+## Two ways to run it
+
+|  | **Server** | **Desktop** |
+| --- | --- | --- |
+| **What it is** | Deployed behind a private reverse proxy, used in the browser or installed as a PWA | A local-first app for macOS, Windows and Linux |
+| **Where the data lives** | On the server, in SQLite | On your machine, in SQLite |
+| **Reach it from** | Every device you own | The machine it is installed on |
+| **Authentication** | Your reverse proxy — Radar has none of its own | None needed; it listens on loopback only |
+| **Agents (MCP)** | `https://<instance>/mcp`, authenticated by your platform | `http://127.0.0.1:8787/mcp`, with a token the app generates |
+| **Start with** | `bottle app deploy` or the `Dockerfile` | `pnpm desktop:package` |
+
+They are the same application: identical domain, use cases and adapters, differing only in
+which composition root starts them and where the database file sits. The desktop app runs
+the entire backend inside Electron's main process — SQLite comes from `node:sqlite`, which
+is part of the runtime Electron already ships, so there is no native module to rebuild and
+no separate server to install.
+
+They do not sync with each other. Pick the one that matches how you read: one machine, or
+all of them.
 
 ## Highlights
 
@@ -120,6 +140,24 @@ pnpm typecheck
 pnpm build          # web/dist + server/dist
 pnpm start          # serves the API and the built client on $PORT (default 8080)
 ```
+
+### Run the desktop app
+
+```sh
+pnpm install
+pnpm desktop                # build everything, then launch the Electron app
+pnpm desktop:package        # installers in desktop/release for the current OS
+```
+
+Data lives in Electron's per-user directory — `~/Library/Application Support/Radar` on
+macOS, `%APPDATA%\Radar` on Windows, `~/.config/Radar` on Linux — with **File → Open data
+folder** to get there. **File → Copy MCP endpoint** puts the local URL and its token on the
+clipboard, which is all a local agent needs.
+
+Packaged builds are unsigned by default, so macOS asks you to confirm on first launch
+(right-click → Open) and Windows shows a SmartScreen notice. Signing is configuration, not
+code: add `mac.identity` and a `CSC_LINK` for Windows in `desktop/electron-builder.yml`.
+The Apple side needs a paid Developer account before notarization will work at all.
 
 ### Run the image
 
@@ -246,11 +284,17 @@ server/   Effect v4 backend, hexagonal
   src/infrastructure   composition root: config + layer wiring
   test/                in-memory adapters, application and adapter tests
 web/      Vite + React 19 client, TanStack Query, hand-written service worker
+desktop/  Electron main process: the second composition root
+  src/main.ts   window, menu, data directory, and the embedded server
+  src/port.ts   picks a stable port, so the origin — and its localStorage — survives
+  build.mjs     bundles the main process and the server into one file with esbuild
 ```
 
 Every port is an Effect `Context.Service`; every adapter is a `Layer`. The application
 layer depends on ports only, and `infrastructure/AppLayer.ts` is the single place that
-decides which adapter satisfies which port. Tests swap in
+decides which adapter satisfies which port — which is exactly why a desktop build costs a
+new entry point rather than a second implementation: `desktop/src/main.ts` calls the same
+`makeAppLayer`, with a different data directory and a loopback address. Tests swap in
 `test/support/InMemoryAdapters.ts` and exercise the real use cases without SQLite or the
 network.
 
