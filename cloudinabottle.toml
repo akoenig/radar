@@ -28,3 +28,9 @@ app_data = true
 [routing]
 health_check = "/api/health"
 # No public paths: the router's owner login is the only authentication layer.
+
+[[services.v2.consumes]]
+service = "github.com/imbue-openhost/openhost/services/secrets"
+shortname = "secrets"
+version = ">=0.1.0"
+grants = [{key = "READER_MCP_TOKEN"}]
