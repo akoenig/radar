@@ -44,27 +44,31 @@ const cacheFirst = async (request: Request) => {
 }
 
 /**
- * Read data fresh when the network allows, but keep the last good copy so an
- * offline launch still shows the feeds and articles already fetched.
+ * Always read data from the network, falling back to the last good copy only
+ * when the network is gone.
+ *
+ * Serving the cache first and revalidating behind it looks faster but is wrong
+ * here: the client refetches precisely when it knows something changed — after
+ * subscribing, or when switching filters — and a cached answer leaves it one
+ * step behind for as long as it keeps asking. Freshness is the whole point of
+ * those requests; the cache exists for the offline case.
  */
-const staleWhileRevalidate = async (request: Request) => {
+const networkFirst = async (request: Request) => {
   const cache = await caches.open(DATA)
-  const cached = await cache.match(request)
-  const network = fetch(request)
-    .then((response) => {
-      if (response.ok) void cache.put(request, response.clone())
-      return response
-    })
-    .catch(() => undefined)
-  if (cached) {
-    void network
-    return cached
+  try {
+    const response = await fetch(request)
+    if (response.ok) void cache.put(request, response.clone())
+    return response
+  } catch {
+    const cached = await cache.match(request)
+    return (
+      cached ??
+      new Response(JSON.stringify({ _tag: "Offline", message: "You are offline." }), {
+        status: 503,
+        headers: { "content-type": "application/json" },
+      })
+    )
   }
-  const response = await network
-  return response ?? new Response(JSON.stringify({ _tag: "Offline", message: "You are offline." }), {
-    status: 503,
-    headers: { "content-type": "application/json" },
-  })
 }
 
 /** Navigations fall back to the cached shell so the app opens without a network. */
@@ -87,7 +91,7 @@ self.addEventListener("fetch", (event) => {
     return
   }
   if (isApiGet(request, url)) {
-    event.respondWith(staleWhileRevalidate(request))
+    event.respondWith(networkFirst(request))
     return
   }
   if (url.pathname.startsWith("/assets/") || /\.(png|svg|webmanifest|woff2?)$/.test(url.pathname)) {
