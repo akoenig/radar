@@ -269,7 +269,9 @@ kbd {
   position: relative;
   background: var(--bg);
   border-right: 1px solid var(--line);
-  padding: 14px 8px 10px;
+  /* The horizontal padding keeps the rows off the edges; in standalone mode it
+     also has to clear the notch and the rounded corners. */
+  padding: 14px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
   overflow: hidden;
 }
 
@@ -462,7 +464,8 @@ body.resizing-sidebar .sidebar-resizer {
 .tree-more {
   position: absolute;
   right: 4px;
-  top: 3px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 24px;
   height: 24px;
   opacity: 0;
@@ -1922,7 +1925,7 @@ body.resizing-sidebar .sidebar-resizer {
     transform: translateX(-100%);
     transition: transform var(--t-med) var(--ease);
     box-shadow: none;
-    padding-left: max(10px, env(safe-area-inset-left));
+    padding-left: max(12px, env(safe-area-inset-left));
   }
   .sidebar.open {
     transform: none;
@@ -2079,7 +2082,6 @@ body.resizing-sidebar .sidebar-resizer {
  * Standalone has no browser chrome, so the app itself must keep clear of the
  * notch, the home indicator and the rounded corners.
  */
-.sidebar,
 .list-pane,
 .reading-pane,
 .discover {
