@@ -1,5 +1,5 @@
 import { Context, Effect, Option } from "effect"
-import type { Entry, EntryQuery, EntryScope } from "../model/Entry.js"
+import type { Entry, EntryQuery, EntryScope, EntrySummary } from "../model/Entry.js"
 import type { EntryId, FeedId, Timestamp } from "../model/Ids.js"
 
 export interface EntryStats {
@@ -10,8 +10,8 @@ export interface EntryStats {
 export interface EntryRepositoryShape {
   readonly findById: (id: EntryId) => Effect.Effect<Option.Option<Entry>>
   readonly findByIds: (ids: ReadonlyArray<EntryId>) => Effect.Effect<ReadonlyArray<Entry>>
-  /** Newest first, cursor paginated. */
-  readonly query: (query: EntryQuery) => Effect.Effect<ReadonlyArray<Entry>>
+  /** Newest first, cursor paginated. Projected: list views never need article bodies. */
+  readonly query: (query: EntryQuery) => Effect.Effect<ReadonlyArray<EntrySummary>>
   /**
    * Insert entries that are new for their feed (by guid) and refresh content of
    * entries already known. Never touches read/saved state. Returns the inserted count.

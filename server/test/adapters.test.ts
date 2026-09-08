@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect"
+import { Effect, Layer, Option } from "effect"
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { discoverInHtml } from "../src/adapters/outbound/feed/FeedDiscovery.js"
@@ -171,6 +171,37 @@ describe("SQLite persistence", () => {
     expect(result.pruned).toBe(1)
     expect(result.stats).toEqual({ unread: 2, saved: 0 })
     expect(result.search).toEqual(["d"])
+  })
+
+  it("lists without loading article bodies, and counts read and saved independently", async () => {
+    const program = Effect.gen(function* () {
+      const feeds = yield* FeedRepository
+      const entries = yield* EntryRepository
+      yield* feeds.save(feed)
+      yield* entries.ingest([
+        entry("a", 1, { content: "<p>a body</p>", summary: "a excerpt" }),
+        entry("b", 2, { content: "<p>b body</p>", summary: "b excerpt", isRead: true, isSaved: true }),
+      ])
+      const listed = yield* entries.query({ unreadOnly: false, savedOnly: false, limit: 10 })
+      const full = yield* entries.findById(EntryId.make("a"))
+      return { listed, full, stats: yield* entries.stats }
+    })
+    const { listed, full, stats } = await Effect.runPromise(
+      program.pipe(Effect.provide(SqlitePersistenceLive({ path: ":memory:" }))),
+    )
+
+    // The list projection carries what a list renders and nothing more. Reading
+    // bodies here costs megabytes a page and no caller ever looks at them.
+    expect(listed.map((e) => e.id)).toEqual(["b", "a"])
+    expect(listed[0]).not.toHaveProperty("content")
+    expect(listed.map((e) => e.summary)).toEqual(["b excerpt", "a excerpt"])
+
+    // Opening one entry still gets the body.
+    expect(Option.getOrThrow(full).content).toBe("<p>a body</p>")
+
+    // "b" is both read and saved, so the two counts must not be derived from
+    // each other or from a single pass that assumes they are exclusive.
+    expect(stats).toEqual({ unread: 1, saved: 1 })
   })
 
   it("rolls back a failed transaction", async () => {

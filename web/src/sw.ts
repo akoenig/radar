@@ -44,6 +44,31 @@ const cacheFirst = async (request: Request) => {
 }
 
 /**
+ * How many API responses the offline copy keeps.
+ *
+ * It is a safety net, not an archive. Cache Storage has no expiry and no size
+ * limit of its own, so an uncapped data cache grows for the life of the
+ * install: every list page under every filter and cursor, and every article
+ * ever opened, bodies included. A few hundred entries is far more than the
+ * offline case needs and keeps the store from becoming the largest thing the
+ * app owns.
+ */
+const DATA_LIMIT = 256
+
+/** Trimming on every write would cost a keys() scan per request. */
+const TRIM_EVERY = 32
+let writesSinceTrim = 0
+
+const remember = async (cache: Cache, request: Request, response: Response) => {
+  await cache.put(request, response)
+  if (++writesSinceTrim < TRIM_EVERY) return
+  writesSinceTrim = 0
+  // Keys come back in insertion order, so the front of the list is the oldest.
+  const keys = await cache.keys()
+  for (const stale of keys.slice(0, keys.length - DATA_LIMIT)) await cache.delete(stale)
+}
+
+/**
  * Always read data from the network, falling back to the last good copy only
  * when the network is gone.
  *
@@ -57,7 +82,7 @@ const networkFirst = async (request: Request) => {
   const cache = await caches.open(DATA)
   try {
     const response = await fetch(request)
-    if (response.ok) void cache.put(request, response.clone())
+    if (response.ok) void remember(cache, request, response.clone())
     return response
   } catch {
     const cached = await cache.match(request)

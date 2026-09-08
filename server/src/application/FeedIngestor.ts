@@ -67,6 +67,9 @@ export const FeedIngestorLive = Layer.effect(
         .withMetadata({ siteUrl: parsed.siteUrl, description: parsed.description, iconUrl: parsed.iconUrl }, now)
         .fetched(now, hints)
 
+      // As with parsing: the write below is synchronous and a refresh queues
+      // one per feed, so let anything already waiting go first.
+      yield* Effect.yieldNow
       const added = yield* uow.transaction(
         Effect.gen(function* () {
           const added = yield* entries.ingest(generated)

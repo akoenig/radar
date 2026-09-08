@@ -2,7 +2,7 @@ import { Effect, Layer, Option } from "effect"
 import { DirectoryUnavailable, FeedNotParseable, FeedUnreachable } from "../../src/domain/errors.js"
 import type { CatalogFeed } from "../../src/domain/model/Catalog.js"
 import type { Category } from "../../src/domain/model/Category.js"
-import type { Entry, EntryQuery, EntryScope } from "../../src/domain/model/Entry.js"
+import type { Entry, EntryQuery, EntryScope, EntrySummary } from "../../src/domain/model/Entry.js"
 import type { Feed } from "../../src/domain/model/Feed.js"
 import type { CategoryId, EntryId, FeedId } from "../../src/domain/model/Ids.js"
 import type { DiscoveredFeed, FetchOutcome, ParsedFeed } from "../../src/domain/model/ParsedFeed.js"
@@ -59,6 +59,19 @@ export const MemoryFeedRepository = (state: MemoryState) =>
       }),
   })
 
+/** The list projection the EntryRepository port promises: no article bodies. */
+const toSummary = (e: Entry): EntrySummary => ({
+  id: e.id,
+  feedId: e.feedId,
+  url: e.url,
+  title: e.title,
+  author: e.author,
+  summary: e.summary,
+  publishedAt: e.publishedAt,
+  isRead: e.isRead,
+  isSaved: e.isSaved,
+})
+
 const matches = (state: MemoryState, e: Entry, q: EntryQuery | EntryScope): boolean => {
   if (q.feedId !== undefined && e.feedId !== q.feedId) return false
   if (q.categoryId !== undefined && state.feeds.get(e.feedId)?.categoryId !== q.categoryId) return false
@@ -78,7 +91,10 @@ export const MemoryEntryRepository = (state: MemoryState) =>
           .filter((e) => !q.search || `${e.title} ${e.summary}`.toLowerCase().includes(q.search.toLowerCase()))
           .sort(newestFirst)
           .filter((e) => !q.before || e.publishedAt < q.before.publishedAt || (e.publishedAt === q.before.publishedAt && e.id < q.before.id))
-          .slice(0, q.limit),
+          .slice(0, q.limit)
+          // Projected exactly as the SQLite adapter projects it, so a caller
+          // that reaches for an article body fails here rather than in production.
+          .map(toSummary),
       ),
     ingest: (entries) =>
       Effect.sync(() => {
