@@ -27,11 +27,19 @@ app_data = true
 
 [routing]
 health_check = "/api/health"
-# No public paths on purpose. The reader, including /mcp, stays behind the
-# platform's authentication — which an MCP client satisfies with a token from
-# `bottle tokens create`, so nothing here needs to be opened up. MCP_AUTH=router
-# in the Dockerfile depends on this; the server checks it at startup and refuses
-# that mode if /mcp is ever listed below.
+# Mobile installers can fetch the manifest and icons without the browser's login
+# cookies. Only these static installation assets are public; the reader, API and
+# /mcp still require platform authentication. MCP_AUTH=router in the Dockerfile
+# depends on /mcp staying protected, which the server checks at startup.
+public_paths = [
+  "/manifest.webmanifest",
+  "/apple-touch-icon.png",
+  "/favicon.svg",
+  "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+]
 
 [[services.v2.consumes]]
 service = "github.com/imbue-openhost/openhost/services/secrets"
