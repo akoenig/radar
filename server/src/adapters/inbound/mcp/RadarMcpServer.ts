@@ -13,7 +13,7 @@ import { CategoryId, EntryId, FeedId } from "../../../domain/model/Ids.js"
 import { htmlToText } from "../../../shared/html.js"
 
 export const MCP_SERVER_NAME = "radar"
-export const MCP_SERVER_VERSION = "0.1.0"
+export const MCP_SERVER_VERSION = "0.2.0"
 
 /** Entries returned per page when the caller does not say. */
 const DEFAULT_LIMIT = 25
