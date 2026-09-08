@@ -8,7 +8,7 @@ import { SubscriptionService } from "../../../application/SubscriptionService.js
 import { RadarApi } from "./Api.js"
 import { mapDomainErrors } from "./ApiErrors.js"
 
-export const APP_VERSION = "0.1.0"
+export const APP_VERSION = "0.2.0"
 
 /**
  * Bundled entries carry no reach, so the field is absent on them; the wire
