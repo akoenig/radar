@@ -1,5 +1,5 @@
 import { Effect, Layer, Option } from "effect"
-import { Entry, type EntryQuery, type EntryScope } from "../../../domain/model/Entry.js"
+import { Entry, type EntryQuery, type EntryScope, type EntrySummary } from "../../../domain/model/Entry.js"
 import { EntryId, FeedId } from "../../../domain/model/Ids.js"
 import { EntryRepository, type EntryRepositoryShape } from "../../../domain/ports/EntryRepository.js"
 import { SqliteDatabase, type SqlValue } from "./SqliteDatabase.js"
@@ -42,6 +42,38 @@ const toEntry = (row: EntryRow): Entry =>
 
 const COLUMNS =
   "e.id, e.feed_id, e.guid, e.url, e.title, e.author, e.summary, e.content, e.published_at, e.fetched_at, e.is_read, e.is_saved, e.read_at, e.saved_at"
+
+/**
+ * The list projection. `content` is deliberately absent: it is by far the
+ * widest column, SQLite has to read its overflow pages to return it, and
+ * nothing that consumes a list ever looks at it.
+ */
+const SUMMARY_COLUMNS = "e.id, e.feed_id, e.url, e.title, e.author, e.summary, e.published_at, e.is_read, e.is_saved"
+
+interface SummaryRow {
+  id: string
+  feed_id: string
+  url: string | null
+  title: string
+  author: string | null
+  summary: string
+  published_at: number
+  is_read: number
+  is_saved: number
+  [key: string]: SqlValue
+}
+
+const toSummary = (row: SummaryRow): EntrySummary => ({
+  id: EntryId.make(row.id),
+  feedId: FeedId.make(row.feed_id),
+  url: row.url,
+  title: row.title,
+  author: row.author,
+  summary: row.summary,
+  publishedAt: row.published_at,
+  isRead: row.is_read === 1,
+  isSaved: row.is_saved === 1,
+})
 
 const bool = (b: boolean): number => (b ? 1 : 0)
 
@@ -98,10 +130,10 @@ export const SqliteEntryRepositoryLive = Layer.effect(
         params.push(q.before.publishedAt, q.before.publishedAt, q.before.id)
       }
       params.push(q.limit)
-      const sql = `SELECT ${COLUMNS} FROM entries e JOIN feeds f ON f.id = e.feed_id
+      const sql = `SELECT ${SUMMARY_COLUMNS} FROM entries e JOIN feeds f ON f.id = e.feed_id
         ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
         ORDER BY e.published_at DESC, e.id DESC LIMIT ?`
-      return Effect.map(db.all<EntryRow>(sql, params), (rows) => rows.map(toEntry))
+      return Effect.map(db.all<SummaryRow>(sql, params), (rows) => rows.map(toSummary))
     }
 
     const ingest: EntryRepositoryShape["ingest"] = (entries) =>
@@ -189,11 +221,24 @@ export const SqliteEntryRepositoryLive = Layer.effect(
       (rows) => new Map(rows.map((r) => [FeedId.make(r.feed_id), r.n] as const)),
     )
 
+    /**
+     * Two counts rather than one pass of SUM().
+     *
+     * `SUM(is_read = 0)` is an expression over every row, so SQLite has to scan
+     * the whole table — bodies included — to answer it. Counting each flag
+     * separately lets the entries_unread and entries_saved indexes answer as
+     * covering indexes. On a database at the per-feed retention ceiling that is
+     * the difference between reading the entire file and reading two indexes.
+     */
+    const count = (sql: string) =>
+      Effect.map(db.get<{ n: number; [k: string]: SqlValue }>(sql), (row) => Number(row?.n ?? 0))
+
     const stats: EntryRepositoryShape["stats"] = Effect.map(
-      db.get<{ unread: number; saved: number; [k: string]: SqlValue }>(
-        "SELECT SUM(is_read = 0) AS unread, SUM(is_saved = 1) AS saved FROM entries",
-      ),
-      (row) => ({ unread: Number(row?.unread ?? 0), saved: Number(row?.saved ?? 0) }),
+      Effect.all([
+        count("SELECT COUNT(*) AS n FROM entries WHERE is_read = 0"),
+        count("SELECT COUNT(*) AS n FROM entries WHERE is_saved = 1"),
+      ]),
+      ([unread, saved]) => ({ unread, saved }),
     )
 
     const prune: EntryRepositoryShape["prune"] = (feedId, keep) =>

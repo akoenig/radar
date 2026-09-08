@@ -94,6 +94,12 @@ export const HttpFeedSourceLive = Layer.effect(
         if (looksLikeHtml(fetched.body)) {
           return yield* new FeedNotParseable({ url, reason: "The URL points to a web page, not a feed" })
         }
+        // Parsing a feed document is the one unavoidably long synchronous step
+        // in a refresh, and a full refresh queues one per feed. Handing the
+        // scheduler a turn first means the run of parses is broken up by
+        // whatever else is waiting — in the desktop app that is the reader's
+        // own requests, served from this same thread.
+        yield* Effect.yieldNow
         const parsed = yield* tryParse(fetched.body, fetched.finalUrl)
         return parsed._tag === "Fetched" ? { ...parsed, hints: fetched.hints } : parsed
       })

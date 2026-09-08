@@ -1,5 +1,5 @@
 import type { Category } from "../../../domain/model/Category.js"
-import type { Entry } from "../../../domain/model/Entry.js"
+import type { Entry, EntrySummary } from "../../../domain/model/Entry.js"
 import type { Feed } from "../../../domain/model/Feed.js"
 import { EntryId } from "../../../domain/model/Ids.js"
 import type { CategoryDto, EntryDto, EntrySummaryDto, FeedDto } from "./Api.js"
@@ -21,7 +21,7 @@ export const feedToDto = (feed: Feed, unread: number): FeedDto => ({
 
 export const categoryToDto = (c: Category): CategoryDto => ({ id: c.id, name: c.name, position: c.position })
 
-export const entryToSummaryDto = (e: Entry): EntrySummaryDto => ({
+export const entryToSummaryDto = (e: EntrySummary): EntrySummaryDto => ({
   id: e.id,
   feedId: e.feedId,
   url: e.url,

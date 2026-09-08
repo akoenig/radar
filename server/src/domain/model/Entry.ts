@@ -31,6 +31,26 @@ export class Entry extends Schema.Class<Entry>("Entry")({
   }
 }
 
+/**
+ * What a list view needs, which is everything but the article body.
+ *
+ * Bodies are the largest thing in the database and no list renders one, so
+ * lists read this projection instead of whole entries. Reading full entries to
+ * build a list costs megabytes per page to produce kilobytes of JSON, and it
+ * is paid on every scroll, filter change and view switch.
+ */
+export interface EntrySummary {
+  readonly id: EntryId
+  readonly feedId: FeedId
+  readonly url: string | null
+  readonly title: string
+  readonly author: string | null
+  readonly summary: string
+  readonly publishedAt: Timestamp
+  readonly isRead: boolean
+  readonly isSaved: boolean
+}
+
 /** Sort key used for stable cursor pagination (newest first). */
 export interface EntryCursor {
   readonly publishedAt: Timestamp

@@ -7,7 +7,7 @@ import { CategoryService } from "../../../application/CategoryService.js"
 import { EntryService } from "../../../application/EntryService.js"
 import { RefreshService } from "../../../application/RefreshService.js"
 import { SubscriptionService } from "../../../application/SubscriptionService.js"
-import type { Entry } from "../../../domain/model/Entry.js"
+import type { EntrySummary } from "../../../domain/model/Entry.js"
 import type { Feed } from "../../../domain/model/Feed.js"
 import { CategoryId, EntryId, FeedId } from "../../../domain/model/Ids.js"
 import { htmlToText } from "../../../shared/html.js"
@@ -73,7 +73,7 @@ const feedSummary = (feed: Feed, unread: number) => ({
   lastError: feed.lastError,
 })
 
-const entrySummary = (entry: Entry, feedTitle: string | undefined) => ({
+const entrySummary = (entry: EntrySummary, feedTitle: string | undefined) => ({
   id: entry.id,
   feedId: entry.feedId,
   feed: feedTitle ?? "unknown feed",

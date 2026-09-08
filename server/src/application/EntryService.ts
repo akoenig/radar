@@ -1,11 +1,11 @@
 import { Clock, Context, Effect, Layer, Option } from "effect"
 import { EntryNotFound } from "../domain/errors.js"
-import type { Entry, EntryQuery, EntryScope } from "../domain/model/Entry.js"
+import type { Entry, EntryQuery, EntryScope, EntrySummary } from "../domain/model/Entry.js"
 import type { EntryId } from "../domain/model/Ids.js"
 import { EntryRepository, type EntryStats } from "../domain/ports/EntryRepository.js"
 
 export interface EntryPage {
-  readonly items: ReadonlyArray<Entry>
+  readonly items: ReadonlyArray<EntrySummary>
   /** Present when more items exist beyond this page. */
   readonly next: { readonly publishedAt: number; readonly id: EntryId } | null
 }
